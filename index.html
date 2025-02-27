@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>六爻在线排盘系统</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>周易六爻在线排盘系统</h1>
+        <div class="notice">
+            <p>请输入六次占卜的阳面个数（0-3），系统将自动生成六爻卦象和详细解读</p>
+        </div>
+        
+        <div class="input-group">
+            <div class="yao-inputs">
+                <input type="text"
+                       id="yaoInput"
+                       placeholder="请输入6位数字（0-3），例如：231003"
+                       maxlength="6"
+                       pattern="[0-3]{6}"
+                       title="请输入6位0-3的数字"
+                       oninput="this.value=this.value.replace(/[^0-3]/g,'')">
+            </div>
+            <button onclick="generateGuaXiang()">生成卦象</button>
+        </div>
+
+        <div id="result" class="result-container">
+            <div class="gua-xian">
+                <h2>生成卦象：</h2>
+                <div id="guaDiagram" class="gua-diagram"></div>
+            </div>
+            <div class="interpretation">
+                <h2>AI解读：</h2>
+                <div id="aiAnalysis" class="analysis-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
