@@ -27,6 +27,33 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
         gua_xian.push(gua);
     }
 
+    // 确定世爻和应爻的位置
+    let a = &gua_xian;
+    let b = &a[0..3];
+    let c = &a[3..6];
+
+    let (shi_idx, ying_idx) = if b[2] == c[2] && b[0] != c[0] && b[1] != c[1] {
+        (1, 4)
+    } else if b[2] != c[2] && b[0] == c[0] && b[1] == c[1] {
+        (4, 1)
+    } else if b[0] == c[0] && b[1] != c[1] && b[2] != c[2] {
+        (3, 0)
+    } else if b[0] != c[0] && b[1] == c[1] && b[2] == c[2] {
+        (0, 3)
+    } else if b[1] == c[1] && b[0] != c[0] && b[2] != c[2] {
+        (3, 0)
+    } else if b[1] != c[1] && b[0] == c[0] && b[2] == c[2] {
+        (2, 5)
+    } else if b[0] == c[0] && b[1] == c[1] && b[2] == c[2] {
+        (5, 2)
+    } else {
+        (2, 5)
+    };
+
+    // 追加世爻和应爻的标记
+    gua_xian[shi_idx].push_str(" 世");
+    gua_xian[ying_idx].push_str(" 应");
+
     HttpResponse::Ok().json(GuaResponse { gua_xian })
 }
 
