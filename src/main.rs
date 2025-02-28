@@ -28,9 +28,8 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     }
 
     // 确定世爻和应爻的位置
-    let a = &gua_xian;
-    let b = &a[0..3];
-    let c = &a[3..6];
+    let b = &gua_xian[0..3];
+    let c = &gua_xian[3..6];
 
     let (shi_idx, ying_idx) = if b[2] == c[2] && b[0] != c[0] && b[1] != c[1] {
         (1, 4)
