@@ -12,6 +12,19 @@ struct GuaResponse {
     gua_xian: Vec<String>,
 }
 
+const DIZHI_WUXING: [(&str, &str); 10] = [
+    ("甲", "木"),
+    ("乙", "木"),
+    ("丙", "火"),
+    ("丁", "火"),
+    ("戊", "土"),
+    ("己", "土"),
+    ("庚", "金"),
+    ("辛", "金"),
+    ("壬", "水"),
+    ("癸", "水"),
+];
+
 async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     let numbers = &req.numbers;
     let mut gua_xian = Vec::new();
