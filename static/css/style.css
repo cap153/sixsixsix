@@ -131,6 +131,27 @@ button:hover {
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
 }
 
+/* 添加五行颜色样式 */
+.gua-diagram div.earth {
+    color: #8B4513; /* 棕色 */
+}
+
+.gua-diagram div.wood {
+    color: #228B22; /* 绿色 */
+}
+
+.gua-diagram div.fire {
+    color: #FF0000; /* 红色 */
+}
+
+.gua-diagram div.metal {
+    color: #FFD700; /* 黄色 */
+}
+
+.gua-diagram div.water {
+    color: #0000FF; /* 蓝色 */
+}
+
 .gua-diagram div.yang::after {
   content: "";
   position: absolute;

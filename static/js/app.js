@@ -21,6 +21,20 @@ async function generateGuaXiang() {
         data.gua_xian.reverse().forEach(gua => {
             const div = document.createElement('div');
             div.textContent = gua;
+
+            // 根据五行添加颜色类
+            if (gua.includes('土')) {
+                div.classList.add('earth');
+            } else if (gua.includes('木')) {
+                div.classList.add('wood');
+            } else if (gua.includes('火')) {
+                div.classList.add('fire');
+            } else if (gua.includes('金')) {
+                div.classList.add('metal');
+            } else if (gua.includes('水')) {
+                div.classList.add('water');
+            }
+
             guaDiagram.appendChild(div);
         });
 

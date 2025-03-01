@@ -32,4 +32,6 @@ b[0] != c[0] 与 b[1] != c[1] 与 b[2] != c[2] 都为真则a[2]为世爻a[5]为�
 ---
 nei数组拼接成字符串匹配结构体HunTian的index拿取到HunTian的nei，gua_xian前三个元素开头加上HunTian的nei地支和五行，例如"子水━━ ━━ x"
 wai数组拼接成字符串匹配结构体HunTian的index拿取到HunTian的wai，gua_xian前三个元素开头加上HunTian的wai地支和五行，例如"午火━━ ━━ x"
+---
+接下来根据五行给卦象的字体添加颜色，包含土为棕色，木为绿色，火为红色，金为黄色，水为蓝色，编辑js判断爻的五行，编辑css添加颜色，后端代码不要动。
 
