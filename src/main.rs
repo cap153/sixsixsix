@@ -61,6 +61,7 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     //nei表示内卦，wai表示外卦
     let (nei, wai) = chars.split_at(3);
 
+
     // 确定世爻和应爻的位置
     let (shi_idx, ying_idx) = if nei[2] == wai[2] && nei[0] != wai[0] && nei[1] != wai[1] {
         (1, 4)
@@ -83,6 +84,22 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     // 追加世爻和应爻的标记
     gua_xian[shi_idx].push_str(" 世");
     gua_xian[ying_idx].push_str(" 应");
+
+    // 追加地支和五行
+    // 拼接nei和wai数组为字符串
+    let nei_index: String = nei.join("");
+    let wai_index: String = wai.join("");
+    // 匹配HunTian结构体的index，获取nei和wai的地支和五行
+    let hun_tian_nei = HUN_TIAN_DATA.iter().find(|&h| h.index == nei_index).unwrap();
+    let hun_tian_wai = HUN_TIAN_DATA.iter().find(|&h| h.index == wai_index).unwrap();
+    // 将nei的地支和五行添加到gua_xian的前三个元素的开头
+    for i in 0..3 {
+        gua_xian[i] = format!("{}{}", hun_tian_nei.nei[i], gua_xian[i]);
+    }
+    // 将wai的地支和五行添加到gua_xian的后三个元素的开头
+    for i in 0..3 {
+        gua_xian[i + 3] = format!("{}{}", hun_tian_wai.wai[i], gua_xian[i + 3]);
+    }
 
     HttpResponse::Ok().json(GuaResponse { gua_xian })
 }
