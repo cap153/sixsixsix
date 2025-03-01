@@ -27,23 +27,35 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
         gua_xian.push(gua);
     }
 
-    // 确定世爻和应爻的位置
-    let b = &gua_xian[0..3];
-    let c = &gua_xian[3..6];
+    //chars是用于过滤动卦的中间字符(有些逻辑不需要动卦判断)
+    let mut chars = Vec::new();
+    for c in numbers.chars() {
+        let gua = match c {
+            '0' => "2".to_string(),
+            '1' => "1".to_string(),
+            '2' => "2".to_string(),
+            '3' => "1".to_string(),
+            _ => "".to_string(),
+        };
+        chars.push(gua);
+    }
+    //nei表示内卦，wai表示外卦
+    let (nei, wai) = chars.split_at(3);
 
-    let (shi_idx, ying_idx) = if b[2] == c[2] && b[0] != c[0] && b[1] != c[1] {
+    // 确定世爻和应爻的位置
+    let (shi_idx, ying_idx) = if nei[2] == wai[2] && nei[0] != wai[0] && nei[1] != wai[1] {
         (1, 4)
-    } else if b[2] != c[2] && b[0] == c[0] && b[1] == c[1] {
+    } else if nei[2] != wai[2] && nei[0] == wai[0] && nei[1] == wai[1] {
         (4, 1)
-    } else if b[0] == c[0] && b[1] != c[1] && b[2] != c[2] {
+    } else if nei[0] == wai[0] && nei[1] != wai[1] && nei[2] != wai[2] {
         (3, 0)
-    } else if b[0] != c[0] && b[1] == c[1] && b[2] == c[2] {
+    } else if nei[0] != wai[0] && nei[1] == wai[1] && nei[2] == wai[2] {
         (0, 3)
-    } else if b[1] == c[1] && b[0] != c[0] && b[2] != c[2] {
+    } else if nei[1] == wai[1] && nei[0] != wai[0] && nei[2] != wai[2] {
         (3, 0)
-    } else if b[1] != c[1] && b[0] == c[0] && b[2] == c[2] {
+    } else if nei[1] != wai[1] && nei[0] == wai[0] && nei[2] == wai[2] {
         (2, 5)
-    } else if b[0] == c[0] && b[1] == c[1] && b[2] == c[2] {
+    } else if nei[0] == wai[0] && nei[1] == wai[1] && nei[2] == wai[2] {
         (5, 2)
     } else {
         (2, 5)
