@@ -100,6 +100,42 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
         gua_xian[i + 3] = format!("{}{}", hun_tian_wai.wai[i], gua_xian[i + 3]);
     }
 
+    // 获取世爻的五行
+    let shi_wuxing = gua_xian[shi_idx].chars().nth(1).unwrap();
+
+    // 根据五行生克关系判断六亲并添加到gua_xian的开头
+    for i in 0..gua_xian.len() {
+        let current_wuxing = gua_xian[i].chars().nth(1).unwrap();
+        let liu_qin = if current_wuxing == shi_wuxing {
+            "兄弟"
+        } else {
+            match (shi_wuxing, current_wuxing) {
+                ('木', '火') => "子孙",
+                ('火', '土') => "子孙",
+                ('土', '金') => "子孙",
+                ('金', '水') => "子孙",
+                ('水', '木') => "子孙",
+                ('木', '土') => "妻财",
+                ('土', '水') => "妻财",
+                ('水', '火') => "妻财",
+                ('火', '金') => "妻财",
+                ('金', '木') => "妻财",
+                ('木', '金') => "官鬼",
+                ('金', '火') => "官鬼",
+                ('火', '水') => "官鬼",
+                ('水', '土') => "官鬼",
+                ('土', '木') => "官鬼",
+                ('木', '水') => "父母",
+                ('水', '金') => "父母",
+                ('金', '土') => "父母",
+                ('土', '火') => "父母",
+                ('火', '木') => "父母",
+                _ => "",
+            }
+        };
+        gua_xian[i] = format!("{}{}", liu_qin, gua_xian[i]);
+    }
+
     HttpResponse::Ok().json(GuaResponse { gua_xian })
 }
 
