@@ -12,6 +12,25 @@ struct GuaResponse {
     gua_xian: Vec<String>,
 }
 
+#[derive(Serialize, Deserialize)]
+struct HunTian {
+    index: &'static str,
+    nei: [&'static str; 3],
+    wai: [&'static str; 3],
+}
+
+// 新增八个本宫卦的地支和五行数据
+const HUN_TIAN_DATA: [HunTian; 8] = [
+    HunTian { index: "111", nei: ["子水", "寅木", "辰土"], wai: ["午火", "申金", "戌土"] },
+    HunTian { index: "122", nei: ["子水", "寅木", "辰土"], wai: ["午火", "申金", "戌土"] },
+    HunTian { index: "212", nei: ["寅木", "辰土", "午火"], wai: ["申金", "戌土", "子水"] },
+    HunTian { index: "221", nei: ["辰土", "午火", "申金"], wai: ["戌土", "子水", "寅木"] },
+    HunTian { index: "222", nei: ["未土", "巳火", "卯木"], wai: ["丑土", "亥水", "酉金"] },
+    HunTian { index: "211", nei: ["丑土", "亥水", "酉金"], wai: ["未土", "巳火", "卯木"] },
+    HunTian { index: "121", nei: ["卯木", "丑土", "亥水"], wai: ["酉金", "未土", "巳火"] },
+    HunTian { index: "112", nei: ["巳火", "卯木", "丑土"], wai: ["亥水", "酉金", "未土"] },
+];
+
 async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     let numbers = &req.numbers;
     let mut gua_xian = Vec::new();
