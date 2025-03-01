@@ -152,23 +152,6 @@ button:hover {
     color: #0000FF; /* 蓝色 */
 }
 
-.gua-diagram div.yang::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 80%;
-  height: 4px;
-  background: var(--accent-color);
-}
-
-.gua-diagram div.yin {
-  background: transparent;
-  border: 3px solid var(--text-dark);
-  color: var(--text-dark);
-}
-
 .analysis-content {
   padding: 1.5rem;
   background: #fff;
