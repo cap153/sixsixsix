@@ -12,7 +12,6 @@ struct GuaResponse {
     gua_xian: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize)]
 struct HunTian {
     index: &'static str,
     nei: [&'static str; 3],
