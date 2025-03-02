@@ -30,6 +30,27 @@ const HUN_TIAN_DATA: [HunTian; 8] = [
     HunTian { index: "112", nei: ["巳火", "卯木", "丑土"], wai: ["亥水", "酉金", "未土"] },
 ];
 
+// 确定世爻和应爻的位置
+fn determine_shi_ying_indices(nei: &[String], wai: &[String]) -> (usize, usize) {
+    if nei[2] == wai[2] && nei[0] != wai[0] && nei[1] != wai[1] {
+        (1, 4)
+    } else if nei[2] != wai[2] && nei[0] == wai[0] && nei[1] == wai[1] {
+        (4, 1)
+    } else if nei[0] == wai[0] && nei[1] != wai[1] && nei[2] != wai[2] {
+        (3, 0)
+    } else if nei[0] != wai[0] && nei[1] == wai[1] && nei[2] == wai[2] {
+        (0, 3)
+    } else if nei[1] == wai[1] && nei[0] != wai[0] && nei[2] != wai[2] {
+        (3, 0)
+    } else if nei[1] != wai[1] && nei[0] == wai[0] && nei[2] == wai[2] {
+        (2, 5)
+    } else if nei[0] == wai[0] && nei[1] == wai[1] && nei[2] == wai[2] {
+        (5, 2)
+    } else {
+        (2, 5)
+    }
+}
+
 async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     let numbers = &req.numbers;
     let mut gua_xian = Vec::new();
@@ -59,26 +80,7 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     }
     //nei表示内卦，wai表示外卦
     let (nei, wai) = chars.split_at(3);
-
-
-    // 确定世爻和应爻的位置
-    let (shi_idx, ying_idx) = if nei[2] == wai[2] && nei[0] != wai[0] && nei[1] != wai[1] {
-        (1, 4)
-    } else if nei[2] != wai[2] && nei[0] == wai[0] && nei[1] == wai[1] {
-        (4, 1)
-    } else if nei[0] == wai[0] && nei[1] != wai[1] && nei[2] != wai[2] {
-        (3, 0)
-    } else if nei[0] != wai[0] && nei[1] == wai[1] && nei[2] == wai[2] {
-        (0, 3)
-    } else if nei[1] == wai[1] && nei[0] != wai[0] && nei[2] != wai[2] {
-        (3, 0)
-    } else if nei[1] != wai[1] && nei[0] == wai[0] && nei[2] == wai[2] {
-        (2, 5)
-    } else if nei[0] == wai[0] && nei[1] == wai[1] && nei[2] == wai[2] {
-        (5, 2)
-    } else {
-        (2, 5)
-    };
+    let (shi_idx, ying_idx) = determine_shi_ying_indices(nei, wai);
 
     // 追加世爻和应爻的标记
     gua_xian[shi_idx].push_str(" 世");
