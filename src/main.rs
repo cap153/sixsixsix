@@ -1,5 +1,5 @@
-use actix_web::{web, App, HttpServer, HttpResponse, Responder};
 use actix_files::Files;
+use actix_web::{App, HttpResponse, HttpServer, Responder, web};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
@@ -12,22 +12,90 @@ struct GuaResponse {
     gua_xian: Vec<String>,
 }
 
-struct HunTian {
+struct SixtyFourGua {
+    // name: &'static str,
     index: &'static str,
     nei: [&'static str; 3],
     wai: [&'static str; 3],
+    palace_element: &'static str,
+    palace_gua: [&'static str; 8],
+    palace_gua_index: [&'static str; 8],
 }
 
 // 新增八个本宫卦的地支和五行数据
-const HUN_TIAN_DATA: [HunTian; 8] = [
-    HunTian { index: "111", nei: ["子水", "寅木", "辰土"], wai: ["午火", "申金", "戌土"] },
-    HunTian { index: "122", nei: ["子水", "寅木", "辰土"], wai: ["午火", "申金", "戌土"] },
-    HunTian { index: "212", nei: ["寅木", "辰土", "午火"], wai: ["申金", "戌土", "子水"] },
-    HunTian { index: "221", nei: ["辰土", "午火", "申金"], wai: ["戌土", "子水", "寅木"] },
-    HunTian { index: "222", nei: ["未土", "巳火", "卯木"], wai: ["丑土", "亥水", "酉金"] },
-    HunTian { index: "211", nei: ["丑土", "亥水", "酉金"], wai: ["未土", "巳火", "卯木"] },
-    HunTian { index: "121", nei: ["卯木", "丑土", "亥水"], wai: ["酉金", "未土", "巳火"] },
-    HunTian { index: "112", nei: ["巳火", "卯木", "丑土"], wai: ["亥水", "酉金", "未土"] },
+const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
+    SixtyFourGua {
+        // name: "乾",
+        index: "111",
+        nei: ["子水", "寅木", "辰土"],
+        wai: ["午火", "申金", "戌土"],
+        palace_element: "金",
+        palace_gua: ["乾为天","天风姤","天山遁","天地否","风地观","山地剥","火地晋","火天大有"],
+        palace_gua_index: ["111111","211111","221111","222111","222211","222221","222121","111121"]
+    },
+    SixtyFourGua {
+        // name: "震",
+        index: "122",
+        nei: ["子水", "寅木", "辰土"],
+        wai: ["午火", "申金", "戌土"],
+        palace_element: "木",
+        palace_gua: ["震为雷","雷地豫","雷水解","雷风恒","地风升","水风井","泽风大过","泽雷随"],
+        palace_gua_index: ["122122","222122","212122","211122","211222","211212","211112","122112"]
+    },
+    SixtyFourGua {
+        // name: "坎",
+        index: "212",
+        nei: ["寅木", "辰土", "午火"],
+        wai: ["申金", "戌土", "子水"],
+        palace_element: "水",
+        palace_gua: ["坎为水","水泽节","水雷屯","水火既济","泽火革","雷火丰","地火明夷","地水师"],
+        palace_gua_index: ["212212","112212","122212","121212","121112","121122","121222","212222"]
+    },
+    SixtyFourGua {
+        // name: "艮",
+        index: "221",
+        nei: ["辰土", "午火", "申金"],
+        wai: ["戌土", "子水", "寅木"],
+        palace_element: "土",
+        palace_gua: ["艮为山","山火贲","山天大畜","山泽损","火泽睽","天泽履","风泽中孚","风山渐"],
+        palace_gua_index: ["221221","121221","111221","112221","112121","112111","112211","221211"]
+    },
+    SixtyFourGua {
+        // name: "坤",
+        index: "222",
+        nei: ["未土", "巳火", "卯木"],
+        wai: ["丑土", "亥水", "酉金"],
+        palace_element: "土",
+        palace_gua: ["坤为地","地雷复","地泽临","地天泰","雷天大壮","泽天夬","水天需","水地比"],
+        palace_gua_index: ["222222","122222","112222","111222","111122","111112","111212","222212"]
+    },
+    SixtyFourGua {
+        // name: "巽",
+        index: "211",
+        nei: ["丑土", "亥水", "酉金"],
+        wai: ["未土", "巳火", "卯木"],
+        palace_element: "木",
+        palace_gua: ["巽为风","风天小畜","风火家人","风雷益","天雷无妄","火雷噬嗑","山雷颐","山风蛊"],
+        palace_gua_index: ["211211","111211","121211","122211","122111","122121","122221","211221"]
+    },
+    SixtyFourGua {
+        // name: "离",
+        index: "121",
+        nei: ["卯木", "丑土", "亥水"],
+        wai: ["酉金", "未土", "巳火"],
+        palace_element: "火",
+        palace_gua: ["离为火","火山旅","火风鼎","火水未济","山水蒙","风水涣","天水讼","天火同人"],
+        palace_gua_index: ["121121","221121","211121","212121","212221","212211","212111","121111"]
+    },
+    SixtyFourGua {
+        // name: "兑",
+        index: "112",
+        nei: ["巳火", "卯木", "丑土"],
+        wai: ["亥水", "酉金", "未土"],
+        palace_element: "金",
+        palace_gua: ["兑为泽","泽水困","泽地萃","泽山咸","水山蹇","地山谦","雷山小过","雷泽归妹"],
+        palace_gua_index: ["112112","212112","222112","221112","221212","221222","221122","112122"]
+    },
 ];
 
 // 确定世爻和应爻的位置
@@ -91,8 +159,14 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     let nei_index: String = nei.join("");
     let wai_index: String = wai.join("");
     // 匹配HunTian结构体的index，获取nei和wai的地支和五行
-    let hun_tian_nei = HUN_TIAN_DATA.iter().find(|&h| h.index == nei_index).unwrap();
-    let hun_tian_wai = HUN_TIAN_DATA.iter().find(|&h| h.index == wai_index).unwrap();
+    let hun_tian_nei = SIXTYFOURGUA_DATA
+        .iter()
+        .find(|&h| h.index == nei_index)
+        .unwrap();
+    let hun_tian_wai = SIXTYFOURGUA_DATA
+        .iter()
+        .find(|&h| h.index == wai_index)
+        .unwrap();
     // 将nei的地支和五行添加到gua_xian的前三个元素的开头
     for i in 0..3 {
         gua_xian[i] = format!("{}{}", hun_tian_nei.nei[i], gua_xian[i]);
