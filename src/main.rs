@@ -99,8 +99,8 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
 ];
 
 // 确定世爻和应爻的位置
-fn determine_shi_ying_indices(nei: &[String], wai: &[String]) -> (usize, usize) {
-    if nei[2] == wai[2] && nei[0] != wai[0] && nei[1] != wai[1] {
+fn determine_shi_ying_indices(nei: &[String], wai: &[String], gua_xian: &mut Vec<String>) {
+    let (shi_idx, ying_idx) = if nei[2] == wai[2] && nei[0] != wai[0] && nei[1] != wai[1] {
         (1, 4)
     } else if nei[2] != wai[2] && nei[0] == wai[0] && nei[1] == wai[1] {
         (4, 1)
@@ -116,6 +116,36 @@ fn determine_shi_ying_indices(nei: &[String], wai: &[String]) -> (usize, usize) 
         (5, 2)
     } else {
         (2, 5)
+    };
+    // 追加世爻和应爻的标记
+    gua_xian[shi_idx].push_str(" 世");
+    gua_xian[ying_idx].push_str(" 应");
+}
+
+// 新增方法：处理地支和五行追加逻辑
+fn append_dizhi_wuxing(nei: &[String], wai: &[String], gua_xian: &mut Vec<String>) {
+    // 拼接nei和wai数组为字符串
+    let nei_index: String = nei.join("");
+    let wai_index: String = wai.join("");
+    
+    // 匹配HunTian结构体的index，获取nei和wai的地支和五行
+    let hun_tian_nei = SIXTYFOURGUA_DATA
+        .iter()
+        .find(|&h| h.index == nei_index)
+        .unwrap();
+    let hun_tian_wai = SIXTYFOURGUA_DATA
+        .iter()
+        .find(|&h| h.index == wai_index)
+        .unwrap();
+    
+    // 将nei的地支和五行添加到gua_xian的前三个元素
+    for i in 0..3 {
+        gua_xian[i] = format!("{}{}", hun_tian_nei.nei[i], gua_xian[i]);
+    }
+    
+    // 将wai的地支和五行添加到gua_xian的后三个元素
+    for i in 0..3 {
+        gua_xian[i + 3] = format!("{}{}", hun_tian_wai.wai[i], gua_xian[i + 3]);
     }
 }
 
@@ -171,6 +201,7 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     let numbers = &req.numbers;
     let mut gua_xian = Vec::new();
 
+    // 需要绘制出来的卦象
     for c in numbers.chars() {
         let gua = match c {
             '0' => "━━ ━━ x".to_string(),
@@ -194,41 +225,21 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
         };
         chars.push(gua);
     }
-    //nei表示内卦，wai表示外卦
+    // nei表示内卦，wai表示外卦
     let (nei, wai) = chars.split_at(3);
-    let (shi_idx, ying_idx) = determine_shi_ying_indices(nei, wai);
 
-    // 追加世爻和应爻的标记
-    gua_xian[shi_idx].push_str(" 世");
-    gua_xian[ying_idx].push_str(" 应");
+    // 确定世爻和应爻的位置
+    determine_shi_ying_indices(nei, wai, &mut gua_xian);
 
-    // 追加地支和五行
-    // 拼接nei和wai数组为字符串
-    let nei_index: String = nei.join("");
-    let wai_index: String = wai.join("");
-    // 匹配HunTian结构体的index，获取nei和wai的地支和五行
-    let hun_tian_nei = SIXTYFOURGUA_DATA
-        .iter()
-        .find(|&h| h.index == nei_index)
-        .unwrap();
-    let hun_tian_wai = SIXTYFOURGUA_DATA
-        .iter()
-        .find(|&h| h.index == wai_index)
-        .unwrap();
-    // 将nei的地支和五行添加到gua_xian的前三个元素的开头
-    for i in 0..3 {
-        gua_xian[i] = format!("{}{}", hun_tian_nei.nei[i], gua_xian[i]);
-    }
-    // 将wai的地支和五行添加到gua_xian的后三个元素的开头
-    for i in 0..3 {
-        gua_xian[i + 3] = format!("{}{}", hun_tian_wai.wai[i], gua_xian[i + 3]);
-    }
+    // 追加地支和五行（替换原205-225行）
+    append_dizhi_wuxing(nei, wai, &mut gua_xian);
 
     // 获取卦宫的五行
     let palace_element = find_palace_element(nei, wai)
         .unwrap_or("未知"); // 处理None情况
-
+    // 判断六亲
     append_liu_qin(palace_element, &mut gua_xian);
+
     HttpResponse::Ok().json(GuaResponse { gua_xian })
 }
 

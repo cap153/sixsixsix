@@ -51,3 +51,7 @@ wai数组拼接成字符串匹配结构体HunTian的index拿取到HunTian的wai�
 写一个方法：传递参数数组nei和数组wai拼接成字符串，如果可以在SIXTYFOURGUA_DATA的palace_gua_index找到，返回对应的palace_element用于六亲的判断，注意比较时的类型
 ---
 把当前判断六亲的代码(195到227行)提取成方法，参数是palace_element和gua_xian指针，保证原来的功能不变
+---
+追加地支和五行提取成方法(205到225行)，传入参数是数组nei和wai以及gua_xian的指针，保证原来的功能不变
+---
+102行的确定世爻和应爻的位置方法删除返回值，增加一个gua_xian的指针参数，把228到230行作移植到该方法
