@@ -131,6 +131,42 @@ fn find_palace_element(nei: &[String], wai: &[String]) -> Option<&'static str> {
         })
 }
 
+// 六亲判断方法
+fn append_liu_qin(palace_element: &str, gua_xian: &mut [String]) {
+    for i in 0..gua_xian.len() {
+        let current_wuxing = gua_xian[i].chars().nth(1).unwrap();
+        let liu_qin = match (palace_element, current_wuxing) {
+            ("金", '金') => "兄弟",
+            ("金", '水') => "子孙",
+            ("金", '木') => "妻财",
+            ("金", '火') => "官鬼",
+            ("金", '土') => "父母",
+            ("木", '木') => "兄弟",
+            ("木", '火') => "子孙",
+            ("木", '土') => "妻财",
+            ("木", '金') => "官鬼",
+            ("木", '水') => "父母",
+            ("水", '水') => "兄弟",
+            ("水", '木') => "子孙",
+            ("水", '火') => "妻财",
+            ("水", '土') => "官鬼",
+            ("水", '金') => "父母",
+            ("火", '火') => "兄弟",
+            ("火", '土') => "子孙",
+            ("火", '金') => "妻财",
+            ("火", '水') => "官鬼",
+            ("火", '木') => "父母",
+            ("土", '土') => "兄弟",
+            ("土", '金') => "子孙",
+            ("土", '水') => "妻财",
+            ("土", '木') => "官鬼",
+            ("土", '火') => "父母",
+            _ => "未知"
+        };
+        gua_xian[i] = format!("{}{}", liu_qin, gua_xian[i]);
+    }
+}
+
 async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     let numbers = &req.numbers;
     let mut gua_xian = Vec::new();
@@ -192,39 +228,7 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     let palace_element = find_palace_element(nei, wai)
         .unwrap_or("未知"); // 处理None情况
 
-    // 根据五行生克关系判断六亲并添加到gua_xian的开头
-    for i in 0..gua_xian.len() {
-        let current_wuxing = gua_xian[i].chars().nth(1).unwrap();
-        let liu_qin = match (palace_element, current_wuxing) {
-            ("金", '金') => "兄弟",
-            ("金", '水') => "子孙",
-            ("金", '木') => "妻财",
-            ("金", '火') => "官鬼",
-            ("金", '土') => "父母",
-            ("木", '木') => "兄弟",
-            ("木", '火') => "子孙",
-            ("木", '土') => "妻财",
-            ("木", '金') => "官鬼",
-            ("木", '水') => "父母",
-            ("水", '水') => "兄弟",
-            ("水", '木') => "子孙",
-            ("水", '火') => "妻财",
-            ("水", '土') => "官鬼",
-            ("水", '金') => "父母",
-            ("火", '火') => "兄弟",
-            ("火", '土') => "子孙",
-            ("火", '金') => "妻财",
-            ("火", '水') => "官鬼",
-            ("火", '木') => "父母",
-            ("土", '土') => "兄弟",
-            ("土", '金') => "子孙",
-            ("土", '水') => "妻财",
-            ("土", '木') => "官鬼",
-            ("土", '火') => "父母",
-            _ => "未知"
-        };
-        gua_xian[i] = format!("{}{}", liu_qin, gua_xian[i]);
-    }
+    append_liu_qin(palace_element, &mut gua_xian);
     HttpResponse::Ok().json(GuaResponse { gua_xian })
 }
 
