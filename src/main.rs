@@ -213,6 +213,22 @@ fn append_liu_qin(palace_element: &str, gua_xian: &mut [String]) {
     }
 }
 
+fn process_gua(ben_gua: &[String], gua_xian: &mut Vec<String>) {
+    // nei表示内卦，wai表示外卦
+    let (nei, wai) = ben_gua.split_at(3);
+
+    // 确定世爻和应爻的位置
+    determine_shi_ying_indices(nei, wai, gua_xian);
+
+    // 追加地支和五行
+    append_dizhi_wuxing(nei, wai, gua_xian);
+
+    // 获取卦宫的五行
+    let palace_element = find_palace_element(nei, wai).unwrap_or("未知"); // 处理None情况
+    // 判断六亲
+    append_liu_qin(palace_element, gua_xian);
+}
+
 async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     let numbers = &req.numbers;
     let mut gua_xian = Vec::new();
@@ -229,8 +245,8 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
         gua_xian.push(gua);
     }
 
-    //chars是用于过滤动卦的中间字符(有些逻辑不需要动卦判断)
-    let mut chars = Vec::new();
+    //删除变卦符号的本卦
+    let mut ben_gua = Vec::new();
     for c in numbers.chars() {
         let gua = match c {
             '0' => "2".to_string(),
@@ -239,21 +255,11 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
             '3' => "1".to_string(),
             _ => "".to_string(),
         };
-        chars.push(gua);
+        ben_gua.push(gua);
     }
-    // nei表示内卦，wai表示外卦
-    let (nei, wai) = chars.split_at(3);
 
-    // 确定世爻和应爻的位置
-    determine_shi_ying_indices(nei, wai, &mut gua_xian);
-
-    // 追加地支和五行
-    append_dizhi_wuxing(nei, wai, &mut gua_xian);
-
-    // 获取卦宫的五行
-    let palace_element = find_palace_element(nei, wai).unwrap_or("未知"); // 处理None情况
-    // 判断六亲
-    append_liu_qin(palace_element, &mut gua_xian);
+    //处理本卦
+    process_gua(&ben_gua, &mut gua_xian);
 
     HttpResponse::Ok().json(GuaResponse { gua_xian })
 }
