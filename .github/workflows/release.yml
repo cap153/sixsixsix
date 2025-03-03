@@ -30,7 +30,7 @@ jobs:
           cp target/release/sixsixsix release/sixsixsix_linux_gnu
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: binaries
           path: release/*
@@ -56,7 +56,7 @@ jobs:
           cp target/release/sixsixsix release/sixsixsix_linux_musl
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: binaries
           path: release/*
@@ -80,7 +80,7 @@ jobs:
           cp target/release/sixsixsix.exe release/sixsixsix.exe
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: binaries
           path: release/*
