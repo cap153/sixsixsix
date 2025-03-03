@@ -60,3 +60,7 @@ gua_xiang所有元素后面加一个空格再挨个拼接上bian_gua_xiang的所
 ---
 let palace_element = find_palace_element(nei, wai).unwrap_or("未知");
 这行的palace_element希望提取成全局变量，判断palace_element是否已经赋值，没有赋值才执行palace_element = find_palace_element(nei, wai).unwrap_or("未知")，不要使用unsafe
+---
+现在的正卦和变卦是通过一个"\t"拼接在一起的，js拿到后需要分开，分别根据五行添加颜色(相关代码提取成方法复用)
+---
+当前正卦和变卦写在了不同行，非常不方便查看

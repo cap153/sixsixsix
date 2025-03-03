@@ -296,7 +296,7 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     // 把正卦和变卦拼接起来
     let mut combined = Vec::new();
     for (gua, bian) in zheng_xiang.iter().zip(bian_xiang.iter()) {
-        combined.push(format!("{} {}", gua, bian));
+        combined.push(format!("{}\t{}", gua, bian));
     }
 
     HttpResponse::Ok().json(GuaResponse { gua_xian: combined })
