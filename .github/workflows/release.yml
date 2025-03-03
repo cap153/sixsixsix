@@ -101,6 +101,7 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: ${{ github.ref_name }}  # 添加这行获取触发工作流的 tag
           files: release/*
           generate_release_notes: true
         env:
