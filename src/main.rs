@@ -220,10 +220,10 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     // 需要绘制出来的卦象
     for c in numbers.chars() {
         let gua = match c {
-            '0' => "━━ ━━ x".to_string(),
+            '0' => "━━ ━━x".to_string(),
             '1' => "━━━━━".to_string(),
             '2' => "━━ ━━".to_string(),
-            '3' => "━━━━━ o".to_string(),
+            '3' => "━━━━━o".to_string(),
             _ => "".to_string(),
         };
         gua_xian.push(gua);
@@ -247,7 +247,7 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     // 确定世爻和应爻的位置
     determine_shi_ying_indices(nei, wai, &mut gua_xian);
 
-    // 追加地支和五行（替换原205-225行）
+    // 追加地支和五行
     append_dizhi_wuxing(nei, wai, &mut gua_xian);
 
     // 获取卦宫的五行
