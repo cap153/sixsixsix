@@ -42,24 +42,17 @@ async function generateGuaXiang() {
             guaDiv.style.display = 'flex';
             guaDiv.style.justifyContent = 'space-between';
             guaDiv.style.alignItems = 'center';
-            guaDiv.style.marginBottom = '1rem';
 
             // 创建正卦的div
             const zhengDiv = document.createElement('div');
-            zhengDiv.style.borderRadius = '8px';
-            zhengDiv.style.padding = '0.5rem';
             zhengDiv.style.flex = '1';
-            zhengDiv.style.marginRight = '0.5rem';
             zhengDiv.textContent = zhengGua;
             addWuxingColorClass(zhengDiv, zhengGua);
             guaDiv.appendChild(zhengDiv);
 
             // 创建变卦的div
             const bianDiv = document.createElement('div');
-            bianDiv.style.borderRadius = '8px';
-            bianDiv.style.padding = '0.5rem';
             bianDiv.style.flex = '1';
-            bianDiv.style.marginLeft = '0.5rem';
             bianDiv.textContent = bianGua;
             addWuxingColorClass(bianDiv, bianGua);
             guaDiv.appendChild(bianDiv);
