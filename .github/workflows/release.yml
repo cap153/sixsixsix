@@ -32,7 +32,7 @@ jobs:
       - name: Upload linux gnu artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: binaries-linux-musl
+          name: binaries-linux-gnu
           path: release/*
 
   build-linux-musl:
@@ -58,7 +58,7 @@ jobs:
       - name: Upload linux musl artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: binaries-windows
+          name: binaries-linux-musl
           path: release/*
 
   build-windows:
@@ -82,7 +82,7 @@ jobs:
       - name: Upload windows artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: binaries-linux-musl 
+          name: binaries-windows 
           path: release/*
 
   release:
