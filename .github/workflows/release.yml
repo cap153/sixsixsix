@@ -84,6 +84,8 @@ jobs:
         with:
           name: binaries-windows 
           path: release/*
+          pattern: binaries-*  # 关键修改：仅下载构建产物 artifacts
+          merge-multiple: true  # 关键修改：合并所有 artifact 到同一目录
 
   release:
     name: Create Release
@@ -102,7 +104,8 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.ref_name }}  # 添加这行获取触发工作流的 tag
-          files: release/*
+          files: |
+            release/sixsixsix*  # 匹配所有可执行文件
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
