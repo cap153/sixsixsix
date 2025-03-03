@@ -37,17 +37,24 @@ async function generateGuaXiang() {
             // 将正卦和变卦分开
             const [zhengGua, bianGua] = gua.split('\t');
 
-            // 创建正卦的div
-            const zhengDiv = document.createElement('div');
-            zhengDiv.textContent = zhengGua;
-            addWuxingColorClass(zhengDiv, zhengGua);
-            guaDiagram.appendChild(zhengDiv);
+            // 创建包含正卦和变卦的div
+            const guaDiv = document.createElement('div');
+            guaDiv.style.display = 'flex';
+            guaDiv.style.justifyContent = 'space-between';
 
-            // 创建变卦的div
-            const bianDiv = document.createElement('div');
-            bianDiv.textContent = bianGua;
-            addWuxingColorClass(bianDiv, bianGua);
-            guaDiagram.appendChild(bianDiv);
+            // 创建正卦的span
+            const zhengSpan = document.createElement('span');
+            zhengSpan.textContent = zhengGua;
+            addWuxingColorClass(zhengSpan, zhengGua);
+            guaDiv.appendChild(zhengSpan);
+
+            // 创建变卦的span
+            const bianSpan = document.createElement('span');
+            bianSpan.textContent = bianGua;
+            addWuxingColorClass(bianSpan, bianGua);
+            guaDiv.appendChild(bianSpan);
+
+            guaDiagram.appendChild(guaDiv);
         });
 
         document.getElementById('result').classList.add('show');

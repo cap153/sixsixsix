@@ -132,23 +132,23 @@ button:hover {
 }
 
 /* 添加五行颜色样式 */
-.gua-diagram div.earth {
+.gua-diagram span.earth {
     color: #8B4513; /* 棕色 */
 }
 
-.gua-diagram div.wood {
+.gua-diagram span.wood {
     color: #228B22; /* 绿色 */
 }
 
-.gua-diagram div.fire {
+.gua-diagram span.fire {
     color: #FF0000; /* 红色 */
 }
 
-.gua-diagram div.metal {
+.gua-diagram span.metal {
     color: #FFD700; /* 黄色 */
 }
 
-.gua-diagram div.water {
+.gua-diagram span.water {
     color: #0000FF; /* 蓝色 */
 }
 
