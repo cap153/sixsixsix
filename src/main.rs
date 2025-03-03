@@ -1,7 +1,30 @@
 use actix_files::Files;
 use actix_web::{App, HttpResponse, HttpServer, Responder, web};
 use serde::{Deserialize, Serialize};
+use rust_embed::RustEmbed;
 
+// 嵌入整个 static 目录（递归所有文件）
+#[derive(RustEmbed)]
+#[folder = "static/"]
+struct Asset;
+
+// 通用处理函数，根据请求路径返回嵌入的文件
+async fn embedded_file(path: web::Path<String>) -> impl Responder {
+    // 如果请求为空，则默认返回 index.html
+    let file_path = if path.is_empty() {
+        "index.html".to_string()
+    } else {
+        path.into_inner()
+    };
+
+    match Asset::get(&file_path) {
+        Some(content) => {
+            // 根据文件后缀可以进一步设置 Content-Type，此处省略，直接返回 body
+            HttpResponse::Ok().body(content.data.into_owned())
+        }
+        None => HttpResponse::NotFound().body("File not found"),
+    }
+}
 
 #[derive(Serialize, Deserialize)]
 struct GuaRequest {
@@ -302,6 +325,8 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
             .route("/generate_gua_xian", web::post().to(generate_gua_xian))
+            // 捕获static所有文件路径请求，注意这里的正则表达式
+            .route("/{filename:.*}", web::get().to(embedded_file))
             .service(Files::new("/", "./static").index_file("index.html"))
     })
     .bind("127.0.0.1:8080")?

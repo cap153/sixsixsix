@@ -68,6 +68,8 @@ let palace_element = find_palace_element(nei, wai).unwrap_or("未知");
 切换到竖屏的时候卦象的文字会换行，能不能自动缩小保证占满1行，不要隐藏字体
 ---
 fn find_palace_element(nei: &[String], wai: &[String]) -> Option<&'static str> 这个方法改成输入参数为一个zheng_gua，不再需要combined，直接用zheng_gua在SIXTYFOURGUA_DATA查找；删除PALACE_ELEMENT和引用，palace_element在generate_gua_xian方法中调用新的find_palace_element赋值;process_gua方法添加palace_element参数用于判断六亲
+---
+需要在编译时携带上static里面的文件
 
 
 
