@@ -66,3 +66,25 @@ let palace_element = find_palace_element(nei, wai).unwrap_or("未知");
 当前正卦和变卦写在了不同行，非常不方便查看，正卦和变卦必须和原来一样分别根据各自的五行来标识颜色不然不好判断生克关系，确保这个优化一下整体外观,用两个左右的方框分别在左右绘制正卦和变卦
 ---
 切换到竖屏的时候卦象的文字会换行，能不能自动缩小保证占满1行，不要隐藏字体
+---
+fn find_palace_element(nei: &[String], wai: &[String]) -> Option<&'static str> 这个方法改成输入参数为一个zheng_gua，不再需要combined，直接用zheng_gua在SIXTYFOURGUA_DATA查找；删除PALACE_ELEMENT和引用，palace_element在generate_gua_xian方法中调用新的find_palace_element赋值;process_gua方法添加palace_element参数用于判断六亲
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

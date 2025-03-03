@@ -1,10 +1,7 @@
-use std::sync::OnceLock;
 use actix_files::Files;
 use actix_web::{App, HttpResponse, HttpServer, Responder, web};
 use serde::{Deserialize, Serialize};
 
-// 存储卦宫的五行属性，只会被初始化1次
-static PALACE_ELEMENT: OnceLock<&'static str> = OnceLock::new();
 
 #[derive(Serialize, Deserialize)]
 struct GuaRequest {
@@ -170,13 +167,11 @@ fn append_dizhi_wuxing(nei: &[String], wai: &[String], gua_xian: &mut Vec<String
 }
 
 //找到卦宫对应的五行属性用于判断六亲
-fn find_palace_element(nei: &[String], wai: &[String]) -> Option<&'static str> {
-    let combined: String = nei.iter().chain(wai).map(|s| s.as_str()).collect();
-
+fn find_palace_element(zheng_gua: &str) -> Option<&'static str> {
     SIXTYFOURGUA_DATA.iter().find_map(|gua| {
         gua.palace_gua_index
             .iter()
-            .find(|&&idx| idx == combined)
+            .find(|&&idx| idx == zheng_gua)
             .map(|_| gua.palace_element)
     })
 }
@@ -217,7 +212,7 @@ fn append_liu_qin(palace_element: &str, gua_xian: &mut [String]) {
     }
 }
 
-fn process_gua(gua: &[String], xiang: &mut Vec<String>) {
+fn process_gua(gua: &[String], xiang: &mut Vec<String>, palace_element: &str) {
     // nei表示内卦，wai表示外卦
     let (nei, wai) = gua.split_at(3);
 
@@ -226,9 +221,6 @@ fn process_gua(gua: &[String], xiang: &mut Vec<String>) {
 
     // 追加地支和五行
     append_dizhi_wuxing(nei, wai, xiang);
-
-    // 获取卦宫的五行，变卦中六亲须按正卦而推，因此使用的五行是一样的只会初始化1次
-    let palace_element = PALACE_ELEMENT.get_or_init(|| find_palace_element(nei, wai).unwrap_or("未知"));
 
     // 判断六亲
     append_liu_qin(palace_element, xiang);
@@ -263,8 +255,11 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
         zheng_gua.push(gua);
     }
 
+    // 获取卦宫五行
+    let palace_element = find_palace_element(&(zheng_gua.join(""))).unwrap_or("未知");
+
     //处理正卦
-    process_gua(&zheng_gua, &mut zheng_xiang);
+    process_gua(&zheng_gua, &mut zheng_xiang, palace_element);
 
     //根据动爻生成变卦
     let mut bian_gua = Vec::new();
@@ -291,7 +286,7 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     }
 
     //处理变卦
-    process_gua(&bian_gua, &mut bian_xiang);
+    process_gua(&bian_gua, &mut bian_xiang, palace_element);
 
     // 把正卦和变卦拼接起来
     let mut combined = Vec::new();
