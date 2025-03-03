@@ -37,22 +37,32 @@ async function generateGuaXiang() {
             // 将正卦和变卦分开
             const [zhengGua, bianGua] = gua.split('\t');
 
-            // 创建包含正卦和变卦的div
+            // 创建包含正卦和变卦的父div
             const guaDiv = document.createElement('div');
             guaDiv.style.display = 'flex';
             guaDiv.style.justifyContent = 'space-between';
+            guaDiv.style.alignItems = 'center';
+            guaDiv.style.marginBottom = '1rem';
 
-            // 创建正卦的span
-            const zhengSpan = document.createElement('span');
-            zhengSpan.textContent = zhengGua;
-            addWuxingColorClass(zhengSpan, zhengGua);
-            guaDiv.appendChild(zhengSpan);
+            // 创建正卦的div
+            const zhengDiv = document.createElement('div');
+            zhengDiv.style.borderRadius = '8px';
+            zhengDiv.style.padding = '0.5rem';
+            zhengDiv.style.flex = '1';
+            zhengDiv.style.marginRight = '0.5rem';
+            zhengDiv.textContent = zhengGua;
+            addWuxingColorClass(zhengDiv, zhengGua);
+            guaDiv.appendChild(zhengDiv);
 
-            // 创建变卦的span
-            const bianSpan = document.createElement('span');
-            bianSpan.textContent = bianGua;
-            addWuxingColorClass(bianSpan, bianGua);
-            guaDiv.appendChild(bianSpan);
+            // 创建变卦的div
+            const bianDiv = document.createElement('div');
+            bianDiv.style.borderRadius = '8px';
+            bianDiv.style.padding = '0.5rem';
+            bianDiv.style.flex = '1';
+            bianDiv.style.marginLeft = '0.5rem';
+            bianDiv.textContent = bianGua;
+            addWuxingColorClass(bianDiv, bianGua);
+            guaDiv.appendChild(bianDiv);
 
             guaDiagram.appendChild(guaDiv);
         });

@@ -241,10 +241,10 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     // 需要绘制的正卦
     for c in numbers.chars() {
         let gua = match c {
-            '0' => "━━ ━━x".to_string(),
+            '0' => "━━ ━━ x".to_string(),
             '1' => "━━━━━".to_string(),
             '2' => "━━ ━━".to_string(),
-            '3' => "━━━━━o".to_string(),
+            '3' => "━━━━━ o".to_string(),
             _ => "".to_string(),
         };
         zheng_xiang.push(gua);
