@@ -1,6 +1,10 @@
+use std::sync::OnceLock;
 use actix_files::Files;
 use actix_web::{App, HttpResponse, HttpServer, Responder, web};
 use serde::{Deserialize, Serialize};
+
+// 存储卦宫的五行属性，只会被初始化1次
+static PALACE_ELEMENT: OnceLock<&'static str> = OnceLock::new();
 
 #[derive(Serialize, Deserialize)]
 struct GuaRequest {
@@ -213,27 +217,28 @@ fn append_liu_qin(palace_element: &str, gua_xian: &mut [String]) {
     }
 }
 
-fn process_gua(ben_gua: &[String], gua_xian: &mut Vec<String>) {
+fn process_gua(gua: &[String], xiang: &mut Vec<String>) {
     // nei表示内卦，wai表示外卦
-    let (nei, wai) = ben_gua.split_at(3);
+    let (nei, wai) = gua.split_at(3);
 
     // 确定世爻和应爻的位置
-    determine_shi_ying_indices(nei, wai, gua_xian);
+    determine_shi_ying_indices(nei, wai, xiang);
 
     // 追加地支和五行
-    append_dizhi_wuxing(nei, wai, gua_xian);
+    append_dizhi_wuxing(nei, wai, xiang);
 
-    // 获取卦宫的五行
-    let palace_element = find_palace_element(nei, wai).unwrap_or("未知"); // 处理None情况
+    // 获取卦宫的五行，变卦中六亲须按正卦而推，因此使用的五行是一样的只会初始化1次
+    let palace_element = PALACE_ELEMENT.get_or_init(|| find_palace_element(nei, wai).unwrap_or("未知"));
+
     // 判断六亲
-    append_liu_qin(palace_element, gua_xian);
+    append_liu_qin(palace_element, xiang);
 }
 
 async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     let numbers = &req.numbers;
-    let mut gua_xian = Vec::new();
+    let mut zheng_xiang = Vec::new();
 
-    // 需要绘制出来的卦象
+    // 需要绘制的正卦
     for c in numbers.chars() {
         let gua = match c {
             '0' => "━━ ━━x".to_string(),
@@ -242,11 +247,11 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
             '3' => "━━━━━o".to_string(),
             _ => "".to_string(),
         };
-        gua_xian.push(gua);
+        zheng_xiang.push(gua);
     }
 
-    //删除变卦符号的本卦
-    let mut ben_gua = Vec::new();
+    //删除变卦符号的正卦
+    let mut zheng_gua = Vec::new();
     for c in numbers.chars() {
         let gua = match c {
             '0' => "2".to_string(),
@@ -255,13 +260,46 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
             '3' => "1".to_string(),
             _ => "".to_string(),
         };
-        ben_gua.push(gua);
+        zheng_gua.push(gua);
     }
 
-    //处理本卦
-    process_gua(&ben_gua, &mut gua_xian);
+    //处理正卦
+    process_gua(&zheng_gua, &mut zheng_xiang);
 
-    HttpResponse::Ok().json(GuaResponse { gua_xian })
+    //根据动爻生成变卦
+    let mut bian_gua = Vec::new();
+    for c in numbers.chars() {
+        let gua = match c {
+            '0' => "1".to_string(),
+            '1' => "1".to_string(),
+            '2' => "2".to_string(),
+            '3' => "2".to_string(),
+            _ => "".to_string(),
+        };
+        bian_gua.push(gua);
+    }
+
+    // 需要绘制的变卦
+    let mut bian_xiang = Vec::new();
+    for num in &bian_gua {
+        let gua = match num.as_str() {
+            "1" => "━━━━━".to_string(),
+            "2" => "━━ ━━".to_string(),
+            _ => "".to_string(),
+        };
+        bian_xiang.push(gua);
+    }
+
+    //处理变卦
+    process_gua(&bian_gua, &mut bian_xiang);
+
+    // 把正卦和变卦拼接起来
+    let mut combined = Vec::new();
+    for (gua, bian) in zheng_xiang.iter().zip(bian_xiang.iter()) {
+        combined.push(format!("{} {}", gua, bian));
+    }
+
+    HttpResponse::Ok().json(GuaResponse { gua_xian: combined })
 }
 
 #[actix_web::main]

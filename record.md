@@ -55,3 +55,8 @@ wai数组拼接成字符串匹配结构体HunTian的index拿取到HunTian的wai�
 追加地支和五行提取成方法(205到225行)，传入参数是数组nei和wai以及gua_xian的指针，保证原来的功能不变
 ---
 102行的确定世爻和应爻的位置方法删除返回值，增加一个gua_xian的指针参数，把228到230行作移植到该方法
+---
+gua_xiang所有元素后面加一个空格再挨个拼接上bian_gua_xiang的所有元素
+---
+let palace_element = find_palace_element(nei, wai).unwrap_or("未知");
+这行的palace_element希望提取成全局变量，判断palace_element是否已经赋值，没有赋值才执行palace_element = find_palace_element(nei, wai).unwrap_or("未知")，不要使用unsafe
