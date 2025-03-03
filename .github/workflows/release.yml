@@ -29,7 +29,7 @@ jobs:
           mkdir -p release
           cp target/release/sixsixsix release/sixsixsix_linux_gnu
 
-      - name: Upload artifacts
+      - name: Upload linux gnu artifacts
         uses: actions/upload-artifact@v4
         with:
           name: binaries
@@ -55,7 +55,7 @@ jobs:
           mkdir -p release
           cp target/release/sixsixsix release/sixsixsix_linux_musl
 
-      - name: Upload artifacts
+      - name: Upload linux musl artifacts
         uses: actions/upload-artifact@v4
         with:
           name: binaries
@@ -79,7 +79,7 @@ jobs:
           mkdir -p release
           cp target/release/sixsixsix.exe release/sixsixsix.exe
 
-      - name: Upload artifacts
+      - name: Upload windows artifacts
         uses: actions/upload-artifact@v4
         with:
           name: binaries
