@@ -33,30 +33,34 @@ async function generateGuaXiang() {
         const guaDiagram = document.getElementById('guaDiagram');
         guaDiagram.innerHTML = '';
 
-        data.gua_xian.reverse().forEach(gua => {
+        data.gua_xian.reverse().forEach((gua, index) => {
             // 将正卦和变卦分开
             const [zhengGua, bianGua] = gua.split('\t');
 
-            // 创建包含正卦和变卦的父div
             const guaDiv = document.createElement('div');
             guaDiv.style.display = 'flex';
-            guaDiv.style.justifyContent = 'space-between';
-            guaDiv.style.alignItems = 'center';
-
-            // 创建正卦的div
+            
+            // 创建正卦div
             const zhengDiv = document.createElement('div');
-            zhengDiv.style.flex = '1';
             zhengDiv.textContent = zhengGua;
-            addWuxingColorClass(zhengDiv, zhengGua);
-            guaDiv.appendChild(zhengDiv);
-
-            // 创建变卦的div
+            
+            // 创建变卦div
             const bianDiv = document.createElement('div');
-            bianDiv.style.flex = '1';
             bianDiv.textContent = bianGua;
-            addWuxingColorClass(bianDiv, bianGua);
-            guaDiv.appendChild(bianDiv);
 
+            // 卦名使用黑色
+            if (index === 0) {
+                zhengDiv.style.cssText = 'text-align: center; color: black; flex: 1';
+                bianDiv.style.cssText = 'text-align: center; color: black; flex: 1';
+            } else {
+                zhengDiv.style.flex = '1';
+                bianDiv.style.flex = '1';
+                addWuxingColorClass(zhengDiv, zhengGua);
+                addWuxingColorClass(bianDiv, bianGua);
+            }
+
+            guaDiv.appendChild(zhengDiv);
+            guaDiv.appendChild(bianDiv);
             guaDiagram.appendChild(guaDiv);
         });
 

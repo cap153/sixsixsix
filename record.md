@@ -70,7 +70,10 @@ let palace_element = find_palace_element(nei, wai).unwrap_or("未知");
 fn find_palace_element(nei: &[String], wai: &[String]) -> Option<&'static str> 这个方法改成输入参数为一个zheng_gua，不再需要combined，直接用zheng_gua在SIXTYFOURGUA_DATA查找；删除PALACE_ELEMENT和引用，palace_element在generate_gua_xian方法中调用新的find_palace_element赋值;process_gua方法添加palace_element参数用于判断六亲
 ---
 需要在编译时携带上static里面的文件
-
+---
+写一个方法类似find_palace_element，传递的参数一样，在SixtyFourGua匹配到palace_gua_index返回相同索引的palace_gua例如传入"212112"返回"泽水困(六合)"；在generate_gua_xian中分别传入zheng_gua和bian_gua，返回值分别追加到zheng_xiang和bian_xiang数组结尾
+---
+js文件gua.split('\t')的zhengGua, bianGua的第0个元素需要居中，并且颜色为黑色
 
 
 

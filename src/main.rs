@@ -42,8 +42,8 @@ struct SixtyFourGua {
     nei: [&'static str; 3],
     wai: [&'static str; 3],
     palace_element: &'static str,
-    // palace_gua: [&'static str; 8],
-    palace_gua_index: [&'static str; 8],
+    gua_name: [&'static str; 8],
+    gua_index: [&'static str; 8],
 }
 
 // 新增八个本宫卦的地支和五行数据
@@ -54,8 +54,8 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
         nei: ["子水", "寅木", "辰土"],
         wai: ["午火", "申金", "戌土"],
         palace_element: "金",
-        // palace_gua: ["乾为天","天风姤","天山遁","天地否","风地观","山地剥","火地晋","火天大有"],
-        palace_gua_index: [
+        gua_name: ["乾为天(六冲)","天风姤","天山遁","天地否(六合)","风地观","山地剥","火地晋","火天大有"],
+        gua_index: [
             "111111", "211111", "221111", "222111", "222211", "222221", "222121", "111121",
         ],
     },
@@ -65,8 +65,8 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
         nei: ["子水", "寅木", "辰土"],
         wai: ["午火", "申金", "戌土"],
         palace_element: "木",
-        // palace_gua: ["震为雷","雷地豫","雷水解","雷风恒","地风升","水风井","泽风大过","泽雷随"],
-        palace_gua_index: [
+        gua_name: ["震为雷(六冲)","雷地豫(六合)","雷水解","雷风恒","地风升","水风井","泽风大过","泽雷随"],
+        gua_index: [
             "122122", "222122", "212122", "211122", "211222", "211212", "211112", "122112",
         ],
     },
@@ -76,8 +76,8 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
         nei: ["寅木", "辰土", "午火"],
         wai: ["申金", "戌土", "子水"],
         palace_element: "水",
-        // palace_gua: ["坎为水","水泽节","水雷屯","水火既济","泽火革","雷火丰","地火明夷","地水师"],
-        palace_gua_index: [
+        gua_name: ["坎为水(六冲)","水泽节(六合)","水雷屯","水火既济","泽火革","雷火丰","地火明夷","地水师"],
+        gua_index: [
             "212212", "112212", "122212", "121212", "121112", "121122", "121222", "212222",
         ],
     },
@@ -87,8 +87,8 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
         nei: ["辰土", "午火", "申金"],
         wai: ["戌土", "子水", "寅木"],
         palace_element: "土",
-        // palace_gua: ["艮为山","山火贲","山天大畜","山泽损","火泽睽","天泽履","风泽中孚","风山渐"],
-        palace_gua_index: [
+        gua_name: ["艮为山(六冲)","山火贲(六合)","山天大畜","山泽损","火泽睽","天泽履","风泽中孚","风山渐"],
+        gua_index: [
             "221221", "121221", "111221", "112221", "112121", "112111", "112211", "221211",
         ],
     },
@@ -98,8 +98,8 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
         nei: ["未土", "巳火", "卯木"],
         wai: ["丑土", "亥水", "酉金"],
         palace_element: "土",
-        // palace_gua: ["坤为地","地雷复","地泽临","地天泰","雷天大壮","泽天夬","水天需","水地比"],
-        palace_gua_index: [
+        gua_name: ["坤为地(六冲)","地雷复(六合)","地泽临","地天泰(六合)","雷天大壮(六冲)","泽天夬","水天需","水地比"],
+        gua_index: [
             "222222", "122222", "112222", "111222", "111122", "111112", "111212", "222212",
         ],
     },
@@ -109,8 +109,8 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
         nei: ["丑土", "亥水", "酉金"],
         wai: ["未土", "巳火", "卯木"],
         palace_element: "木",
-        // palace_gua: ["巽为风","风天小畜","风火家人","风雷益","天雷无妄","火雷噬嗑","山雷颐","山风蛊"],
-        palace_gua_index: [
+        gua_name: ["巽为风(六冲)","风天小畜","风火家人","风雷益","天雷无妄(六冲)","火雷噬嗑","山雷颐","山风蛊"],
+        gua_index: [
             "211211", "111211", "121211", "122211", "122111", "122121", "122221", "211221",
         ],
     },
@@ -120,8 +120,8 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
         nei: ["卯木", "丑土", "亥水"],
         wai: ["酉金", "未土", "巳火"],
         palace_element: "火",
-        // palace_gua: ["离为火","火山旅","火风鼎","火水未济","山水蒙","风水涣","天水讼","天火同人"],
-        palace_gua_index: [
+        gua_name: ["离为火(六冲)","火山旅(六合)","火风鼎","火水未济","山水蒙","风水涣","天水讼","天火同人"],
+        gua_index: [
             "121121", "221121", "211121", "212121", "212221", "212211", "212111", "121111",
         ],
     },
@@ -131,8 +131,8 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
         nei: ["巳火", "卯木", "丑土"],
         wai: ["亥水", "酉金", "未土"],
         palace_element: "金",
-        // palace_gua: ["兑为泽","泽水困","泽地萃","泽山咸","水山蹇","地山谦","雷山小过","雷泽归妹"],
-        palace_gua_index: [
+        gua_name: ["兑为泽(六冲)","泽水困(六合)","泽地萃","泽山咸","水山蹇","地山谦","雷山小过","雷泽归妹"],
+        gua_index: [
             "112112", "212112", "222112", "221112", "221212", "221222", "221122", "112122",
         ],
     },
@@ -192,10 +192,20 @@ fn append_dizhi_wuxing(nei: &[String], wai: &[String], gua_xian: &mut Vec<String
 //找到卦宫对应的五行属性用于判断六亲
 fn find_palace_element(zheng_gua: &str) -> Option<&'static str> {
     SIXTYFOURGUA_DATA.iter().find_map(|gua| {
-        gua.palace_gua_index
+        gua.gua_index
             .iter()
             .find(|&&idx| idx == zheng_gua)
             .map(|_| gua.palace_element)
+    })
+}
+
+//查找对应的卦宫名称
+fn find_palace_name(zheng_gua: &str) -> Option<&'static str> {
+    SIXTYFOURGUA_DATA.iter().find_map(|gua| {
+        gua.gua_index
+            .iter()
+            .position(|&idx| idx == zheng_gua)
+            .map(|pos| gua.gua_name[pos])
     })
 }
 
@@ -284,6 +294,11 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     //处理正卦
     process_gua(&zheng_gua, &mut zheng_xiang, palace_element);
 
+    //追加卦名
+    if let Some(name) = find_palace_name(&zheng_gua.join("")) {
+        zheng_xiang.push(name.to_string());
+    }
+
     //根据动爻生成变卦
     let mut bian_gua = Vec::new();
     for c in numbers.chars() {
@@ -310,6 +325,11 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
 
     //处理变卦
     process_gua(&bian_gua, &mut bian_xiang, palace_element);
+
+    //追加卦名
+    if let Some(name) = find_palace_name(&bian_gua.join("")) {
+        bian_xiang.push(name.to_string());
+    }
 
     // 把正卦和变卦拼接起来
     let mut combined = Vec::new();
