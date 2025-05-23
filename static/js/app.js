@@ -1,15 +1,30 @@
-// 提取颜色添加逻辑为可复用的方法
-function addWuxingColorClass(element, text) {
-    if (text.includes('土')) {
-        element.classList.add('earth');
-    } else if (text.includes('木')) {
-        element.classList.add('wood');
-    } else if (text.includes('火')) {
-        element.classList.add('fire');
-    } else if (text.includes('金')) {
-        element.classList.add('metal');
-    } else if (text.includes('水')) {
-        element.classList.add('water');
+// Updated function to add color based on the Earthly Branch character
+function addWuxingColorClass(element, branchChar) {
+    // Clear any existing wuxing color classes to prevent conflicts
+    element.classList.remove('earth', 'wood', 'fire', 'metal', 'water');
+    switch (branchChar) {
+        case '子':
+        case '亥':
+            element.classList.add('water'); // 水 - Blue
+            break;
+        case '寅':
+        case '卯':
+            element.classList.add('wood');  // 木 - Green
+            break;
+        case '巳':
+        case '午':
+            element.classList.add('fire');  // 火 - Red
+            break;
+        case '申':
+        case '酉':
+            element.classList.add('metal'); // 金 - Yellow
+            break;
+        case '辰':
+        case '戌':
+        case '丑':
+        case '未':
+            element.classList.add('earth'); // 土 - Brown
+            break;
     }
 }
 
@@ -61,8 +76,8 @@ async function generateGuaXiang() {
             } else {
                 zhengDiv.style.flex = '1';
                 bianDiv.style.flex = '1';
-                addWuxingColorClass(zhengDiv, zhengGua);
-                addWuxingColorClass(bianDiv, bianGua);
+                addWuxingColorClass(zhengDiv, zhengGua.charAt(2));
+                addWuxingColorClass(bianDiv, bianGua.charAt(2));
             }
 
             guaDiv.appendChild(zhengDiv);
