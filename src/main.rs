@@ -219,11 +219,10 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
     },
 ];
 
+//获取干支信息，例如乙巳年 辛巳月 壬辰日 申时
 fn get_ganzhi_info() -> (String, String, String, String) {
-    // Get the current local date and time
+    //获取本地的日期和时间
     let now = Local::now();
-
-    // Create a Solar object from the current time
     let current_solar = solar::from_ymdhms(
         now.year() as i64,   // Cast i32 to i64
         now.month() as i64,  // Cast u32 to i64
@@ -232,16 +231,14 @@ fn get_ganzhi_info() -> (String, String, String, String) {
         now.minute() as i64, // Cast u32 to i64
         now.second() as i64, // Cast u32 to i64
     );
-
-    // Convert the Solar object to a Lunar object
+    //转换成lunar可以识别的日期
     let current_lunar = current_solar.get_lunar();
-
-    // Get the Ganzhi components:
+    //获取干支信息
     let year_ganzhi = current_lunar.get_year_in_gan_zhi();
     let month_ganzhi = current_lunar.get_month_in_gan_zhi();
     let day_ganzhi = current_lunar.get_day_in_gan_zhi();
     let hour_ganzhi = current_lunar.get_time_zhi();
-
+    //返回干支信息
     (year_ganzhi, month_ganzhi, day_ganzhi, hour_ganzhi)
 }
 
@@ -274,7 +271,6 @@ fn append_dizhi_wuxing(nei: &[String], wai: &[String], gua_xian: &mut Vec<String
     // 拼接nei和wai数组为字符串
     let nei_index: String = nei.join("");
     let wai_index: String = wai.join("");
-
     // 匹配HunTian结构体的index，获取nei和wai的地支和五行
     let hun_tian_nei = SIXTYFOURGUA_DATA
         .iter()
@@ -284,12 +280,10 @@ fn append_dizhi_wuxing(nei: &[String], wai: &[String], gua_xian: &mut Vec<String
         .iter()
         .find(|&h| h.index == wai_index)
         .unwrap();
-
     // 将nei的地支和五行添加到gua_xian的前三个元素
     for i in 0..3 {
         gua_xian[i] = format!("{}{}", hun_tian_nei.nei[i], gua_xian[i]);
     }
-
     // 将wai的地支和五行添加到gua_xian的后三个元素
     for i in 0..3 {
         gua_xian[i + 3] = format!("{}{}", hun_tian_wai.wai[i], gua_xian[i + 3]);
@@ -356,13 +350,10 @@ fn append_liu_qin(palace_element: &str, gua_xian: &mut [String]) {
 fn process_zheng_gua(gua: &[String], xiang: &mut Vec<String>, palace_element: &str) {
     // nei表示内卦，wai表示外卦
     let (nei, wai) = gua.split_at(3);
-
     // 确定世爻和应爻的位置
     determine_shi_ying_indices(nei, wai, xiang);
-
     // 追加地支和五行
     append_dizhi_wuxing(nei, wai, xiang);
-
     // 判断六亲
     append_liu_qin(palace_element, xiang);
 }
@@ -371,10 +362,8 @@ fn process_zheng_gua(gua: &[String], xiang: &mut Vec<String>, palace_element: &s
 fn process_bian_gua(gua: &[String], xiang: &mut Vec<String>, palace_element: &str) {
     // nei表示内卦，wai表示外卦
     let (nei, wai) = gua.split_at(3);
-
     // 追加地支和五行
     append_dizhi_wuxing(nei, wai, xiang);
-
     // 判断六亲
     append_liu_qin(palace_element, xiang);
 }
@@ -384,7 +373,6 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     let mut zheng_xiang = Vec::new();
     // 获取干支信息
     let (year_ganzhi, month_ganzhi, day_ganzhi, hour_ganzhi) = get_ganzhi_info();
-
     // 需要绘制的正卦
     for c in numbers.chars() {
         let gua = match c {
@@ -396,7 +384,6 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
         };
         zheng_xiang.push(gua);
     }
-
     //删除变卦符号的正卦
     let mut zheng_gua = Vec::new();
     for c in numbers.chars() {
@@ -409,18 +396,14 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
         };
         zheng_gua.push(gua);
     }
-
     // 获取卦宫五行
     let palace_element = find_palace_element(&(zheng_gua.join(""))).unwrap_or("未知");
-
     //处理正卦
     process_zheng_gua(&zheng_gua, &mut zheng_xiang, palace_element);
-
     //追加卦名
     if let Some(name) = find_palace_name(&zheng_gua.join("")) {
         zheng_xiang.push(name.to_string());
     }
-
     //根据动爻生成变卦
     let mut bian_gua = Vec::new();
     for c in numbers.chars() {
@@ -433,7 +416,6 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
         };
         bian_gua.push(gua);
     }
-
     // 需要绘制的变卦
     let mut bian_xiang = Vec::new();
     for num in &bian_gua {
@@ -444,21 +426,18 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
         };
         bian_xiang.push(gua);
     }
-
     //处理变卦
     process_bian_gua(&bian_gua, &mut bian_xiang, palace_element);
-
     //追加卦名
     if let Some(name) = find_palace_name(&bian_gua.join("")) {
         bian_xiang.push(name.to_string());
     }
-
     // 把正卦和变卦拼接起来
     let mut combined = Vec::new();
     for (gua, bian) in zheng_xiang.iter().zip(bian_xiang.iter()) {
         combined.push(format!("{}\t{}", gua, bian));
     }
-
+    //json格式
     HttpResponse::Ok().json(GuaResponse {
         gua_xian: combined,
         year_ganzhi,

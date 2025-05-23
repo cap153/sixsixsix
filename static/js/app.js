@@ -1,3 +1,4 @@
+//根据地支属性展现不同的颜色
 function addWuxingColorClass(element, branchChar) {
     element.classList.remove('earth', 'wood', 'fire', 'metal', 'water');
     switch (branchChar) {
