@@ -352,12 +352,25 @@ fn append_liu_qin(palace_element: &str, gua_xian: &mut [String]) {
     }
 }
 
-fn process_gua(gua: &[String], xiang: &mut Vec<String>, palace_element: &str) {
+//处理正卦
+fn process_zheng_gua(gua: &[String], xiang: &mut Vec<String>, palace_element: &str) {
     // nei表示内卦，wai表示外卦
     let (nei, wai) = gua.split_at(3);
 
     // 确定世爻和应爻的位置
     determine_shi_ying_indices(nei, wai, xiang);
+
+    // 追加地支和五行
+    append_dizhi_wuxing(nei, wai, xiang);
+
+    // 判断六亲
+    append_liu_qin(palace_element, xiang);
+}
+
+//处理变卦不再需要关注世应
+fn process_bian_gua(gua: &[String], xiang: &mut Vec<String>, palace_element: &str) {
+    // nei表示内卦，wai表示外卦
+    let (nei, wai) = gua.split_at(3);
 
     // 追加地支和五行
     append_dizhi_wuxing(nei, wai, xiang);
@@ -401,7 +414,7 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     let palace_element = find_palace_element(&(zheng_gua.join(""))).unwrap_or("未知");
 
     //处理正卦
-    process_gua(&zheng_gua, &mut zheng_xiang, palace_element);
+    process_zheng_gua(&zheng_gua, &mut zheng_xiang, palace_element);
 
     //追加卦名
     if let Some(name) = find_palace_name(&zheng_gua.join("")) {
@@ -433,7 +446,7 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     }
 
     //处理变卦
-    process_gua(&bian_gua, &mut bian_xiang, palace_element);
+    process_bian_gua(&bian_gua, &mut bian_xiang, palace_element);
 
     //追加卦名
     if let Some(name) = find_palace_name(&bian_gua.join("")) {
