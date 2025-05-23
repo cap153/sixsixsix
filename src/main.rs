@@ -224,8 +224,6 @@ fn get_ganzhi_info() -> (String, String, String, String) {
     let now = Local::now();
 
     // Create a Solar object from the current time
-    // solar::from_ymdhms expects all arguments as i64.
-    // We need to cast the values from chrono.
     let current_solar = solar::from_ymdhms(
         now.year() as i64,   // Cast i32 to i64
         now.month() as i64,  // Cast u32 to i64
@@ -377,10 +375,10 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     // 需要绘制的正卦
     for c in numbers.chars() {
         let gua = match c {
-            '0' => "━━ ━━ x".to_string(),
-            '1' => "━━━━━".to_string(),
-            '2' => "━━ ━━".to_string(),
-            '3' => "━━━━━ o".to_string(),
+            '0' => "⚋ x".to_string(),
+            '1' => "⚊".to_string(),
+            '2' => "⚋".to_string(),
+            '3' => "⚊ o".to_string(),
             _ => "".to_string(),
         };
         zheng_xiang.push(gua);
@@ -427,8 +425,8 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     let mut bian_xiang = Vec::new();
     for num in &bian_gua {
         let gua = match num.as_str() {
-            "1" => "━━━━━".to_string(),
-            "2" => "━━ ━━".to_string(),
+            "1" => "⚋".to_string(),
+            "2" => "⚊".to_string(),
             _ => "".to_string(),
         };
         bian_xiang.push(gua);
