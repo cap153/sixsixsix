@@ -163,23 +163,23 @@ button:hover {
 }
 
 /* 添加五行颜色样式 */
-.gua-diagram div.earth {
+.gua-diagram .earth {
     color: #8B4513; /* 棕色 */
 }
 
-.gua-diagram div.wood {
+.gua-diagram .wood {
     color: #228B22; /* 绿色 */
 }
 
-.gua-diagram div.fire {
+.gua-diagram .fire {
     color: #FF0000; /* 红色 */
 }
 
-.gua-diagram div.metal {
+.gua-diagram .metal {
     color: #FFD700; /* 黄色 */
 }
 
-.gua-diagram div.water {
+.gua-diagram .water {
     color: #0000FF; /* 蓝色 */
 }
 

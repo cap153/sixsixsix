@@ -76,6 +76,8 @@ fn find_palace_element(nei: &[String], wai: &[String]) -> Option<&'static str> �
 js文件gua.split('\t')的zhengGua, bianGua的第0个元素需要居中，并且颜色为黑色
 --------
 现在需要在生成卦象下面展示干支信息(纪年、纪月、纪日和纪时)打算通过lunar_rust来获取，展示类似丙寅年 癸巳月 癸酉日 子时
+---
+颜色逻辑判断更改为通过地支来判断，干支使用不同颜色显示年月日时，例如乙巳年 辛巳月 壬辰日 申时对应的颜色是红 红 棕 黄，判断逻辑和卦名一致
 
 
 

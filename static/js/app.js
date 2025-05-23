@@ -1,6 +1,4 @@
-// Updated function to add color based on the Earthly Branch character
 function addWuxingColorClass(element, branchChar) {
-    // Clear any existing wuxing color classes to prevent conflicts
     element.classList.remove('earth', 'wood', 'fire', 'metal', 'water');
     switch (branchChar) {
         case '子':
@@ -48,11 +46,26 @@ async function generateGuaXiang() {
         const guaDiagram = document.getElementById('guaDiagram');
         guaDiagram.innerHTML = '';
 
-        // 展示干支信息
-        const ganzhiInfo = document.createElement('div');
-        ganzhiInfo.classList.add('ganzhi-info');
-        ganzhiInfo.textContent = `${data.year_ganzhi}年 ${data.month_ganzhi}月 ${data.day_ganzhi}日 ${data.hour_ganzhi}时`;
-        guaDiagram.appendChild(ganzhiInfo);
+        // 展示干支信息 with colors
+        const ganzhiInfoDiv = document.createElement('div');
+        ganzhiInfoDiv.classList.add('ganzhi-info');
+        const ganzhiParts = [
+            { text: data.year_ganzhi + '年', branchChar: data.year_ganzhi.charAt(1) },
+            { text: data.month_ganzhi + '月', branchChar: data.month_ganzhi.charAt(1) },
+            { text: data.day_ganzhi + '日', branchChar: data.day_ganzhi.charAt(1) },
+            { text: data.hour_ganzhi + '时', branchChar: data.hour_ganzhi.charAt(0) }
+        ];
+        ganzhiParts.forEach((part, index) => {
+            const span = document.createElement('span');
+            span.textContent = part.text;
+            addWuxingColorClass(span, part.branchChar);
+            ganzhiInfoDiv.appendChild(span);
+            if (index < ganzhiParts.length - 1) {
+                // Add a space between parts, which will not be colored by wuxing classes
+                ganzhiInfoDiv.appendChild(document.createTextNode(' '));
+            }
+        });
+        guaDiagram.appendChild(ganzhiInfoDiv);
 
         data.gua_xian.reverse().forEach((gua, index) => {
             // 将正卦和变卦分开
