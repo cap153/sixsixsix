@@ -74,7 +74,8 @@ fn find_palace_element(nei: &[String], wai: &[String]) -> Option<&'static str> �
 写一个方法类似find_palace_element，传递的参数一样，在SixtyFourGua匹配到palace_gua_index返回相同索引的palace_gua例如传入"212112"返回"泽水困(六合)"；在generate_gua_xian中分别传入zheng_gua和bian_gua，返回值分别追加到zheng_xiang和bian_xiang数组结尾
 ---
 js文件gua.split('\t')的zhengGua, bianGua的第0个元素需要居中，并且颜色为黑色
-
+--------
+现在需要在生成卦象下面展示干支信息(纪年、纪月、纪日和纪时)打算通过lunar_rust来获取，展示类似丙寅年 癸巳月 癸酉日 子时
 
 
 

@@ -33,6 +33,12 @@ async function generateGuaXiang() {
         const guaDiagram = document.getElementById('guaDiagram');
         guaDiagram.innerHTML = '';
 
+        // 展示干支信息
+        const ganzhiInfo = document.createElement('div');
+        ganzhiInfo.classList.add('ganzhi-info');
+        ganzhiInfo.textContent = `${data.year_ganzhi}年 ${data.month_ganzhi}月 ${data.day_ganzhi}日 ${data.hour_ganzhi}时`;
+        guaDiagram.appendChild(ganzhiInfo);
+
         data.gua_xian.reverse().forEach((gua, index) => {
             // 将正卦和变卦分开
             const [zhengGua, bianGua] = gua.split('\t');

@@ -1,7 +1,12 @@
 use actix_files::Files;
-use actix_web::{App, HttpResponse, HttpServer, Responder, web};
-use serde::{Deserialize, Serialize};
+use actix_web::{web, App, HttpResponse, HttpServer, Responder};
+use chrono::{Datelike, Local, Timelike};
+use lunar_rust::{
+    lunar::LunarRefHelper,
+    solar::{self, SolarRefHelper},
+};
 use rust_embed::RustEmbed;
+use serde::{Deserialize, Serialize}; // For getting the current time
 
 // 嵌入整个 static 目录（递归所有文件）
 #[derive(RustEmbed)]
@@ -34,6 +39,10 @@ struct GuaRequest {
 #[derive(Serialize, Deserialize)]
 struct GuaResponse {
     gua_xian: Vec<String>,
+    year_ganzhi: String,
+    month_ganzhi: String,
+    day_ganzhi: String,
+    hour_ganzhi: String,
 }
 
 struct SixtyFourGua {
@@ -54,7 +63,16 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
         nei: ["子水", "寅木", "辰土"],
         wai: ["午火", "申金", "戌土"],
         palace_element: "金",
-        gua_name: ["乾为天(六冲)","天风姤","天山遁","天地否(六合)","风地观","山地剥","火地晋","火天大有"],
+        gua_name: [
+            "乾为天(六冲)",
+            "天风姤",
+            "天山遁",
+            "天地否(六合)",
+            "风地观",
+            "山地剥",
+            "火地晋",
+            "火天大有",
+        ],
         gua_index: [
             "111111", "211111", "221111", "222111", "222211", "222221", "222121", "111121",
         ],
@@ -65,7 +83,16 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
         nei: ["子水", "寅木", "辰土"],
         wai: ["午火", "申金", "戌土"],
         palace_element: "木",
-        gua_name: ["震为雷(六冲)","雷地豫(六合)","雷水解","雷风恒","地风升","水风井","泽风大过","泽雷随"],
+        gua_name: [
+            "震为雷(六冲)",
+            "雷地豫(六合)",
+            "雷水解",
+            "雷风恒",
+            "地风升",
+            "水风井",
+            "泽风大过",
+            "泽雷随",
+        ],
         gua_index: [
             "122122", "222122", "212122", "211122", "211222", "211212", "211112", "122112",
         ],
@@ -76,7 +103,16 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
         nei: ["寅木", "辰土", "午火"],
         wai: ["申金", "戌土", "子水"],
         palace_element: "水",
-        gua_name: ["坎为水(六冲)","水泽节(六合)","水雷屯","水火既济","泽火革","雷火丰","地火明夷","地水师"],
+        gua_name: [
+            "坎为水(六冲)",
+            "水泽节(六合)",
+            "水雷屯",
+            "水火既济",
+            "泽火革",
+            "雷火丰",
+            "地火明夷",
+            "地水师",
+        ],
         gua_index: [
             "212212", "112212", "122212", "121212", "121112", "121122", "121222", "212222",
         ],
@@ -87,7 +123,16 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
         nei: ["辰土", "午火", "申金"],
         wai: ["戌土", "子水", "寅木"],
         palace_element: "土",
-        gua_name: ["艮为山(六冲)","山火贲(六合)","山天大畜","山泽损","火泽睽","天泽履","风泽中孚","风山渐"],
+        gua_name: [
+            "艮为山(六冲)",
+            "山火贲(六合)",
+            "山天大畜",
+            "山泽损",
+            "火泽睽",
+            "天泽履",
+            "风泽中孚",
+            "风山渐",
+        ],
         gua_index: [
             "221221", "121221", "111221", "112221", "112121", "112111", "112211", "221211",
         ],
@@ -98,7 +143,16 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
         nei: ["未土", "巳火", "卯木"],
         wai: ["丑土", "亥水", "酉金"],
         palace_element: "土",
-        gua_name: ["坤为地(六冲)","地雷复(六合)","地泽临","地天泰(六合)","雷天大壮(六冲)","泽天夬","水天需","水地比"],
+        gua_name: [
+            "坤为地(六冲)",
+            "地雷复(六合)",
+            "地泽临",
+            "地天泰(六合)",
+            "雷天大壮(六冲)",
+            "泽天夬",
+            "水天需",
+            "水地比",
+        ],
         gua_index: [
             "222222", "122222", "112222", "111222", "111122", "111112", "111212", "222212",
         ],
@@ -109,7 +163,16 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
         nei: ["丑土", "亥水", "酉金"],
         wai: ["未土", "巳火", "卯木"],
         palace_element: "木",
-        gua_name: ["巽为风(六冲)","风天小畜","风火家人","风雷益","天雷无妄(六冲)","火雷噬嗑","山雷颐","山风蛊"],
+        gua_name: [
+            "巽为风(六冲)",
+            "风天小畜",
+            "风火家人",
+            "风雷益",
+            "天雷无妄(六冲)",
+            "火雷噬嗑",
+            "山雷颐",
+            "山风蛊",
+        ],
         gua_index: [
             "211211", "111211", "121211", "122211", "122111", "122121", "122221", "211221",
         ],
@@ -120,7 +183,16 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
         nei: ["卯木", "丑土", "亥水"],
         wai: ["酉金", "未土", "巳火"],
         palace_element: "火",
-        gua_name: ["离为火(六冲)","火山旅(六合)","火风鼎","火水未济","山水蒙","风水涣","天水讼","天火同人"],
+        gua_name: [
+            "离为火(六冲)",
+            "火山旅(六合)",
+            "火风鼎",
+            "火水未济",
+            "山水蒙",
+            "风水涣",
+            "天水讼",
+            "天火同人",
+        ],
         gua_index: [
             "121121", "221121", "211121", "212121", "212221", "212211", "212111", "121111",
         ],
@@ -131,12 +203,49 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
         nei: ["巳火", "卯木", "丑土"],
         wai: ["亥水", "酉金", "未土"],
         palace_element: "金",
-        gua_name: ["兑为泽(六冲)","泽水困(六合)","泽地萃","泽山咸","水山蹇","地山谦","雷山小过","雷泽归妹"],
+        gua_name: [
+            "兑为泽(六冲)",
+            "泽水困(六合)",
+            "泽地萃",
+            "泽山咸",
+            "水山蹇",
+            "地山谦",
+            "雷山小过",
+            "雷泽归妹",
+        ],
         gua_index: [
             "112112", "212112", "222112", "221112", "221212", "221222", "221122", "112122",
         ],
     },
 ];
+
+fn get_ganzhi_info() -> (String, String, String, String) {
+    // Get the current local date and time
+    let now = Local::now();
+
+    // Create a Solar object from the current time
+    // solar::from_ymdhms expects all arguments as i64.
+    // We need to cast the values from chrono.
+    let current_solar = solar::from_ymdhms(
+        now.year() as i64,   // Cast i32 to i64
+        now.month() as i64,  // Cast u32 to i64
+        now.day() as i64,    // Cast u32 to i64
+        now.hour() as i64,   // Cast u32 to i64
+        now.minute() as i64, // Cast u32 to i64
+        now.second() as i64, // Cast u32 to i64
+    );
+
+    // Convert the Solar object to a Lunar object
+    let current_lunar = current_solar.get_lunar();
+
+    // Get the Ganzhi components:
+    let year_ganzhi = current_lunar.get_year_in_gan_zhi();
+    let month_ganzhi = current_lunar.get_month_in_gan_zhi();
+    let day_ganzhi = current_lunar.get_day_in_gan_zhi();
+    let hour_ganzhi = current_lunar.get_time_zhi();
+
+    (year_ganzhi, month_ganzhi, day_ganzhi, hour_ganzhi)
+}
 
 // 确定世爻和应爻的位置
 fn determine_shi_ying_indices(nei: &[String], wai: &[String], gua_xian: &mut Vec<String>) {
@@ -262,6 +371,8 @@ fn process_gua(gua: &[String], xiang: &mut Vec<String>, palace_element: &str) {
 async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     let numbers = &req.numbers;
     let mut zheng_xiang = Vec::new();
+    // 获取干支信息
+    let (year_ganzhi, month_ganzhi, day_ganzhi, hour_ganzhi) = get_ganzhi_info();
 
     // 需要绘制的正卦
     for c in numbers.chars() {
@@ -337,7 +448,13 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
         combined.push(format!("{}\t{}", gua, bian));
     }
 
-    HttpResponse::Ok().json(GuaResponse { gua_xian: combined })
+    HttpResponse::Ok().json(GuaResponse {
+        gua_xian: combined,
+        year_ganzhi,
+        month_ganzhi,
+        day_ganzhi,
+        hour_ganzhi,
+    })
 }
 
 #[actix_web::main]
