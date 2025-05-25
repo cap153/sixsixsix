@@ -414,13 +414,13 @@ fn append_chong_he_relations(
             .map(|c| c.to_string())
             .unwrap_or_default();
         // if shi_ying_dong.contains(&i) {
-            //判断世爻、应爻、动爻对于日月的冲克关系
-            if let Some(relation) = get_chong_he_relation(&dizhi, month_dizhi) {
-                gua.push_str(&format!(" 月{}", relation));
-            }
-            if let Some(relation) = get_chong_he_relation(&dizhi, day_dizhi) {
-                gua.push_str(&format!(" 日{}", relation));
-            }
+        //判断世爻、应爻、动爻对于日月的冲克关系
+        if let Some(relation) = get_chong_he_relation(&dizhi, month_dizhi) {
+            gua.push_str(&format!(" 月{}", relation));
+        }
+        if let Some(relation) = get_chong_he_relation(&dizhi, day_dizhi) {
+            gua.push_str(&format!(" 日{}", relation));
+        }
         // }
     }
 }
@@ -459,9 +459,9 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     // 处理正卦(卦象添加地支、五行和六亲)
     let (nei, wai) = process_gua(&zheng_gua, &mut zheng_xiang, palace_element);
     // 确定世爻和应爻的位置
-    // let (shi_idx, ying_idx) = 
+    // let (shi_idx, ying_idx) =
     determine_shi_ying_indices(nei, wai, &mut zheng_xiang);
-    // 需要判断冲克关系的爻的索引(世爻、应爻、动爻)
+    // 需要判断冲克关系的爻的索引(世爻、应爻、动爻)考虑到暗动改成所有爻都判断
     // let mut shi_ying_dong: Vec<usize> = numbers
     //     .chars()
     //     .enumerate()
@@ -472,10 +472,11 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     // shi_ying_dong.push(ying_idx);
     // 追加冲合关系
     append_chong_he_relations(
-        &mut zheng_xiang, 
-        // shi_ying_dong, 
-        &month_ganzhi, 
-        &day_ganzhi);
+        &mut zheng_xiang,
+        // shi_ying_dong,
+        &month_ganzhi,
+        &day_ganzhi,
+    );
     //追加卦名
     if let Some(name) = find_palace_name(&zheng_gua.join("")) {
         zheng_xiang.push(name.to_string());
