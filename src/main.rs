@@ -205,14 +205,14 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
         wai: ["亥水", "酉金", "未土"],
         palace_element: "金",
         gua_name: [
-            "兑为泽(六冲)",
-            "泽水困(六合)",
-            "泽地萃",
-            "泽山咸",
-            "水山蹇",
-            "地山谦",
-            "雷山小过",
-            "雷泽归妹",
+            "兑为泽䷹(六冲)",
+            "泽水困䷮(六合)",
+            "泽地萃䷬",
+            "泽山咸䷞",
+            "水山蹇䷦",
+            "地山谦䷎",
+            "雷山小过䷽",
+            "雷泽归妹䷵",
         ],
         gua_index: [
             "112112", "212112", "222112", "221112", "221212", "221222", "221122", "112122",
@@ -499,8 +499,8 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     let mut bian_xiang = Vec::new();
     for num in &bian_gua {
         let gua = match num.as_str() {
-            "1" => "⚋".to_string(),
-            "2" => "⚊".to_string(),
+            "1" => "⚊".to_string(),
+            "2" => "⚋".to_string(),
             _ => "".to_string(),
         };
         bian_xiang.push(gua);
