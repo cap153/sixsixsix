@@ -415,7 +415,7 @@ fn append_chong_he_relations(
             .map(|c| c.to_string())
             .unwrap_or_default();
         // if shi_ying_dong.contains(&i) {
-        //判断世爻、应爻、动爻对于日月的冲克关系
+        //判断世爻、应爻、动爻对于日月的冲合关系
         if let Some(relation) = get_chong_he_relation(&dizhi, month_dizhi) {
             gua.push_str(&format!(" 月{}", relation));
         }
