@@ -81,10 +81,23 @@ js文件gua.split('\t')的zhengGua, bianGua的第0个元素需要居中，并且
 ---
 generate_gua_xian在调用完process_zheng_gua方法后第三个字是地支，其中世爻和应爻可以根据调用完process_zheng_gua是否存在'世'或'应'字符来判断(或者调用determine_shi_ying_indices时可以拿到索引)，删除变卦符号时的0和3对应的爻是动爻；地支六冲是子午 丑未 寅申 卯酉 辰戌 巳亥 地支六合是子丑 寅亥 卯戌 辰酉 巳申 午未，现在需要把干支中的月和日对于世爻、应爻、动爻中的冲克关系追加到正卦对应爻的后面，比如月冲 月合 日冲 日合；
 ---
+请帮我把struct SixtyFourGua中的nei和wai分别拆分成nei_dizhi、nei_wuxing和wai_dizhi、wai_wuxing
+对应的SIXTYFOURGUA_DATA中的数据也拆分开，例如原来的
+nei: ["子水", "寅木", "辰土"],
+wai: ["午火", "申金", "戌土"],
+拆分成
+nei_dizhi: ["子", "寅", "辰"],
+nei_wuxing: ["水", "木", "土"],
+wai_dizhi: ["午", "申", "戌"],
+wai_wuxing: ["火", "金", "土"],
+在fn append_dizhi_wuxing中使用了里面的数据，拆分成两个fn append_dizhi和fn append_dizhi
+在fn generate_gua_xian中调用了fn append_dizhi_wuxing的地方改成先后调用fn append_dizhi和fn append_dizhi
+---
 添加一个地支转化五行的函数，方便日和月比较生克，爻的五行可以直接在六十四卦结构体获取。
 添加一个判断生克的函数(参考原来判断冲合的get_chong_he_relation，复用部分判断六亲append_liu_qin)。
-正卦和变卦查询到的数据先分别装填到结构体里面，方便拿取地支和五行比较月和日的生克冲合(生克目前没有需要额外添加)，已经变卦的回头生克冲合，最后再把需要的结果拼接起来发送给前端。
-世应的确定改成在六十四卦结构体中直接拿取节省开销。
+正卦和变卦查询到的数据先分别装填到结构体里面。最后再把需要的结果拼接起来发送给前端。
+添加变卦的回头生克冲合。
+世应的确定改成在六十四卦结构体中直接拿取节省开销，世应的位置在游魂归魂等卦是固定的，可以写到结构体的默认值中。
 
 
 

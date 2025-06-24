@@ -46,51 +46,54 @@ struct GuaResponse {
 }
 
 struct SixtyFourGua {
-    // name: &'static str,
     index: &'static str,
-    nei: [&'static str; 3],
-    wai: [&'static str; 3],
+    nei_dizhi: [&'static str; 3],
+    nei_wuxing: [&'static str; 3],
+    wai_dizhi: [&'static str; 3],
+    wai_wuxing: [&'static str; 3],
     palace_element: &'static str,
     gua_name: [&'static str; 8],
     gua_index: [&'static str; 8],
 }
 
-// 新增八个本宫卦的地支和五行数据
 const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
     SixtyFourGua {
         // name: "乾",
         index: "111",
-        nei: ["子水", "寅木", "辰土"],
-        wai: ["午火", "申金", "戌土"],
+        nei_dizhi: ["子", "寅", "辰"],
+        nei_wuxing: ["水", "木", "土"],
+        wai_dizhi: ["午", "申", "戌"],
+        wai_wuxing: ["火", "金", "土"],
         palace_element: "金",
         gua_name: [
-            "乾为天䷀ (六冲)",
-            "天风姤䷫ ",
-            "天山遁䷠ ",
-            "天地否䷋ (六合)",
-            "风地观䷓ ",
-            "山地剥䷖ ",
-            "火地晋䷢ ",
+            "乾为天䷀(六冲)",
+            "天风姤䷫",
+            "天山遁䷠",
+            "天地否䷋(六合)",
+            "风地观䷓",
+            "山地剥䷖",
+            "火地晋䷢",
             "火天大有䷍",
         ],
         gua_index: [
             "111111", "211111", "221111", "222111", "222211", "222221", "222121", "111121",
         ],
     },
-
     SixtyFourGua {
         // name: "震",
         index: "122",
-        nei: ["子水", "寅木", "辰土"],
-        wai: ["午火", "申金", "戌土"],
+        nei_dizhi: ["子", "寅", "辰"],
+        nei_wuxing: ["水", "木", "土"],
+        wai_dizhi: ["午", "申", "戌"],
+        wai_wuxing: ["火", "金", "土"],
         palace_element: "木",
         gua_name: [
-            "震为雷䷲ (六冲)",
-            "雷地豫䷏ (六合)",
-            "雷水解䷧ ",
-            "雷风恒䷟ ",
-            "地风升䷭ ",
-            "水风井䷯ ",
+            "震为雷䷲(六冲)",
+            "雷地豫䷏(六合)",
+            "雷水解䷧",
+            "雷风恒䷟",
+            "地风升䷭",
+            "水风井䷯",
             "泽风大过䷛",
             "泽雷随䷐",
         ],
@@ -101,8 +104,10 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
     SixtyFourGua {
         // name: "坎",
         index: "212",
-        nei: ["寅木", "辰土", "午火"],
-        wai: ["申金", "戌土", "子水"],
+        nei_dizhi: ["寅", "辰", "午"],
+        nei_wuxing: ["木", "土", "火"],
+        wai_dizhi: ["申", "戌", "子"],
+        wai_wuxing: ["金", "土", "水"],
         palace_element: "水",
         gua_name: [
             "坎为水䷜(六冲)",
@@ -121,8 +126,10 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
     SixtyFourGua {
         // name: "艮",
         index: "221",
-        nei: ["辰土", "午火", "申金"],
-        wai: ["戌土", "子水", "寅木"],
+        nei_dizhi: ["辰", "午", "申"],
+        nei_wuxing: ["土", "火", "金"],
+        wai_dizhi: ["戌", "子", "寅"],
+        wai_wuxing: ["土", "水", "木"],
         palace_element: "土",
         gua_name: [
             "艮为山䷳(六冲)",
@@ -141,8 +148,10 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
     SixtyFourGua {
         // name: "坤",
         index: "222",
-        nei: ["未土", "巳火", "卯木"],
-        wai: ["丑土", "亥水", "酉金"],
+        nei_dizhi: ["未", "巳", "卯"],
+        nei_wuxing: ["土", "火", "木"],
+        wai_dizhi: ["丑", "亥", "酉"],
+        wai_wuxing: ["土", "水", "金"],
         palace_element: "土",
         gua_name: [
             "坤为地䷁(六冲)",
@@ -161,8 +170,10 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
     SixtyFourGua {
         // name: "巽",
         index: "211",
-        nei: ["丑土", "亥水", "酉金"],
-        wai: ["未土", "巳火", "卯木"],
+        nei_dizhi: ["丑", "亥", "酉"],
+        nei_wuxing: ["土", "水", "金"],
+        wai_dizhi: ["未", "巳", "卯"],
+        wai_wuxing: ["土", "火", "木"],
         palace_element: "木",
         gua_name: [
             "巽为风䷸(六冲)",
@@ -181,8 +192,10 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
     SixtyFourGua {
         // name: "离",
         index: "121",
-        nei: ["卯木", "丑土", "亥水"],
-        wai: ["酉金", "未土", "巳火"],
+        nei_dizhi: ["卯", "丑", "亥"],
+        nei_wuxing: ["木", "土", "水"],
+        wai_dizhi: ["酉", "未", "巳"],
+        wai_wuxing: ["金", "土", "火"],
         palace_element: "火",
         gua_name: [
             "离为火䷝(六冲)",
@@ -201,8 +214,10 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
     SixtyFourGua {
         // name: "兑",
         index: "112",
-        nei: ["巳火", "卯木", "丑土"],
-        wai: ["亥水", "酉金", "未土"],
+        nei_dizhi: ["巳", "卯", "丑"],
+        nei_wuxing: ["火", "木", "土"],
+        wai_dizhi: ["亥", "酉", "未"],
+        wai_wuxing: ["水", "金", "土"],
         palace_element: "金",
         gua_name: [
             "兑为泽䷹(六冲)",
@@ -273,12 +288,11 @@ fn determine_shi_ying_indices(
     (shi_idx, ying_idx)
 }
 
-//追加地支和五行
-fn append_dizhi_wuxing(nei: &[String], wai: &[String], gua_xian: &mut Vec<String>) {
-    // 拼接nei和wai数组为字符串
+// 追加地支
+fn append_dizhi(nei: &[String], wai: &[String], gua_xian: &mut Vec<String>) {
     let nei_index: String = nei.join("");
     let wai_index: String = wai.join("");
-    // 匹配HunTian结构体的index，获取nei和wai的地支和五行
+    // 匹配HunTian结构体的index，获取nei和wai的地支
     let hun_tian_nei = SIXTYFOURGUA_DATA
         .iter()
         .find(|&h| h.index == nei_index)
@@ -287,41 +301,44 @@ fn append_dizhi_wuxing(nei: &[String], wai: &[String], gua_xian: &mut Vec<String
         .iter()
         .find(|&h| h.index == wai_index)
         .unwrap();
-    // 将nei的地支和五行添加到gua_xian的前三个元素
+    // 将nei的地支添加到gua_xian的前三个元素
     for i in 0..3 {
-        gua_xian[i] = format!("{}{}", hun_tian_nei.nei[i], gua_xian[i]);
+        gua_xian[i] = format!("{}{}", hun_tian_nei.nei_dizhi[i], gua_xian[i]);
     }
-    // 将wai的地支和五行添加到gua_xian的后三个元素
+    // 将wai的地支添加到gua_xian的后三个元素
     for i in 0..3 {
-        gua_xian[i + 3] = format!("{}{}", hun_tian_wai.wai[i], gua_xian[i + 3]);
+        gua_xian[i + 3] = format!("{}{}", hun_tian_wai.wai_dizhi[i], gua_xian[i + 3]);
     }
 }
 
-//找到卦宫对应的五行属性用于判断六亲
-fn find_palace_element(zheng_gua: &str) -> Option<&'static str> {
-    SIXTYFOURGUA_DATA.iter().find_map(|gua| {
-        gua.gua_index
-            .iter()
-            .find(|&&idx| idx == zheng_gua)
-            .map(|_| gua.palace_element)
-    })
-}
-
-//查找对应的卦宫名称
-fn find_palace_name(zheng_gua: &str) -> Option<&'static str> {
-    SIXTYFOURGUA_DATA.iter().find_map(|gua| {
-        gua.gua_index
-            .iter()
-            .position(|&idx| idx == zheng_gua)
-            .map(|pos| gua.gua_name[pos])
-    })
+// 追加五行
+fn append_wuxing(nei: &[String], wai: &[String], gua_xian: &mut Vec<String>) {
+    let nei_index: String = nei.join("");
+    let wai_index: String = wai.join("");
+    // 匹配HunTian结构体的index，获取nei和wai的五行
+    let hun_tian_nei = SIXTYFOURGUA_DATA
+        .iter()
+        .find(|&h| h.index == nei_index)
+        .unwrap();
+    let hun_tian_wai = SIXTYFOURGUA_DATA
+        .iter()
+        .find(|&h| h.index == wai_index)
+        .unwrap();
+    // 将nei的五行添加到gua_xian的前三个元素
+    for i in 0..3 {
+        gua_xian[i] = format!("{}{}", hun_tian_nei.nei_wuxing[i], gua_xian[i]);
+    }
+    // 将wai的五行添加到gua_xian的后三个元素
+    for i in 0..3 {
+        gua_xian[i + 3] = format!("{}{}", hun_tian_wai.wai_wuxing[i], gua_xian[i + 3]);
+    }
 }
 
 // 六亲判断方法
-fn append_liu_qin(palace_element: &str, gua_xian: &mut [String]) {
+fn append_liuqin(palace_element: &str, gua_xian: &mut [String]) {
     for i in 0..gua_xian.len() {
         let current_wuxing = gua_xian[i].chars().nth(1).unwrap();
-        let liu_qin = match (palace_element, current_wuxing) {
+        let liuqin = match (palace_element, current_wuxing) {
             ("金", '金') => "兄弟",
             ("金", '水') => "子孙",
             ("金", '木') => "妻财",
@@ -349,8 +366,28 @@ fn append_liu_qin(palace_element: &str, gua_xian: &mut [String]) {
             ("土", '火') => "父母",
             _ => "未知",
         };
-        gua_xian[i] = format!("{}{}", liu_qin, gua_xian[i]);
+        gua_xian[i] = format!("{}{}", liuqin, gua_xian[i]);
     }
+}
+
+//找到卦宫对应的五行属性用于判断六亲
+fn find_palace_element(zheng_gua: &str) -> Option<&'static str> {
+    SIXTYFOURGUA_DATA.iter().find_map(|gua| {
+        gua.gua_index
+            .iter()
+            .find(|&&idx| idx == zheng_gua)
+            .map(|_| gua.palace_element)
+    })
+}
+
+//查找对应的卦宫名称
+fn find_palace_name(zheng_gua: &str) -> Option<&'static str> {
+    SIXTYFOURGUA_DATA.iter().find_map(|gua| {
+        gua.gua_index
+            .iter()
+            .position(|&idx| idx == zheng_gua)
+            .map(|pos| gua.gua_name[pos])
+    })
 }
 
 //处理卦
@@ -361,10 +398,11 @@ fn process_gua<'a>(
 ) -> (&'a [String], &'a [String]) {
     // nei表示内卦，wai表示外卦
     let (nei, wai) = gua.split_at(3);
-    // 追加地支和五行
-    append_dizhi_wuxing(nei, wai, xiang);
-    // 判断六亲
-    append_liu_qin(palace_element, xiang);
+    // 从右往左追加五行和地支
+    append_wuxing(nei, wai, xiang);
+    append_dizhi(nei, wai, xiang);
+    // 追加六亲
+    append_liuqin(palace_element, xiang);
     // 返回内外卦数字用于判断世应等操作
     (nei, wai)
 }
