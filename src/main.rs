@@ -392,12 +392,12 @@ fn find_palace_name(zheng_gua: &str) -> Option<&'static str> {
 
 //处理卦
 fn process_gua<'a>(
-    gua: &'a [String],
+    gua_num: &'a [String],
     xiang: &mut Vec<String>,
     palace_element: &str,
 ) -> (&'a [String], &'a [String]) {
     // nei表示内卦，wai表示外卦
-    let (nei, wai) = gua.split_at(3);
+    let (nei, wai) = gua_num.split_at(3);
     // 从右往左追加五行和地支
     append_wuxing(nei, wai, xiang);
     append_dizhi(nei, wai, xiang);
