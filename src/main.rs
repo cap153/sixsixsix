@@ -285,6 +285,18 @@ fn get_ganzhi_info() -> (String, String, String, String) {
     )
 }
 
+// 辅助函数：根据地支获取五行
+fn get_dizhi_wuxing(dizhi: &str) -> Option<&'static str> {
+    match dizhi {
+        "子" | "亥" => Some("水"),
+        "寅" | "卯" => Some("木"),
+        "巳" | "午" => Some("火"),
+        "申" | "酉" => Some("金"),
+        "辰" | "戌" | "丑" | "未" => Some("土"),
+        _ => None,
+    }
+}
+
 // 判断地支之间的冲合关系
 fn get_chong_he_relation(dizhi1: &str, dizhi2: &str) -> Option<&'static str> {
     match (dizhi1, dizhi2) {
@@ -312,6 +324,42 @@ fn get_chong_he_relation(dizhi1: &str, dizhi2: &str) -> Option<&'static str> {
         | ("申", "巳")
         | ("午", "未")
         | ("未", "午") => Some("合"),
+        _ => None,
+    }
+}
+
+// 判断地支之间的生克关系
+fn get_sheng_ke_relation(element1: &str, element2: &str) -> Option<&'static str> {
+    // 统一将输入转换为五行，如果输入本身就是五行，则直接使用
+    let wuxing1 = get_dizhi_wuxing(element1).unwrap_or(element1);
+    let wuxing2 = get_dizhi_wuxing(element2).unwrap_or(element2);
+
+    match wuxing1 {
+        "木" => match wuxing2 {
+            "火" => Some("生"),
+            "土" => Some("克"),
+            _ => None,
+        },
+        "火" => match wuxing2 {
+            "土" => Some("生"),
+            "金" => Some("克"),
+            _ => None,
+        },
+        "土" => match wuxing2 {
+            "金" => Some("生"),
+            "水" => Some("克"),
+            _ => None,
+        },
+        "金" => match wuxing2 {
+            "水" => Some("生"),
+            "木" => Some("克"),
+            _ => None,
+        },
+        "水" => match wuxing2 {
+            "木" => Some("生"),
+            "火" => Some("克"),
+            _ => None,
+        },
         _ => None,
     }
 }
@@ -528,10 +576,20 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
         if zheng_gua.ying_idx == Some(i) {
             zheng_line.push_str(" 应");
         }
+        // 判断并追加冲合关系 (月对爻)
         if let Some(relation) = get_chong_he_relation(zheng_gua.dizhi[i], month_dizhi) {
             zheng_line.push_str(&format!(" 月{}", relation));
         }
+        // 判断并追加冲合关系 (日对爻)
         if let Some(relation) = get_chong_he_relation(zheng_gua.dizhi[i], day_dizhi) {
+            zheng_line.push_str(&format!(" 日{}", relation));
+        }
+        // 判断并追加生克关系 (月对爻)
+        if let Some(relation) = get_sheng_ke_relation(month_dizhi, zheng_gua.dizhi[i]) {
+            zheng_line.push_str(&format!(" 月{}", relation));
+        }
+        // 判断并追加生克关系 (日对爻)
+        if let Some(relation) = get_sheng_ke_relation(day_dizhi, zheng_gua.dizhi[i]) {
             zheng_line.push_str(&format!(" 日{}", relation));
         }
 

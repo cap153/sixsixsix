@@ -93,9 +93,43 @@ wai_wuxing: ["火", "金", "土"],
 在fn append_dizhi_wuxing中使用了里面的数据，拆分成两个fn append_dizhi和fn append_dizhi
 在fn generate_gua_xian中调用了fn append_dizhi_wuxing的地方改成先后调用fn append_dizhi和fn append_dizhi
 ---
-添加一个地支转化五行的函数，方便日和月比较生克，爻的五行可以直接在六十四卦结构体获取。
-添加一个判断生克的函数(参考原来判断冲合的get_chong_he_relation，复用部分判断六亲append_liu_qin)。
-正卦和变卦查询到的数据先分别装填到结构体里面。最后再把需要的结果拼接起来发送给前端。
+我写了一个结构体
+struct Gua {
+    shi_idx: &'static str,
+    ying_idx: &'static str,
+    dizhi: [&'static str; 6],
+    wuxing: [&'static str; 6],
+    liuqin: [&'static str; 6],
+    palace_element: &'static str,
+    palace_name: &'static str,
+}
+现在需要把fn generate_gua_xian中的zheng_gua和bian_gua的数据类型都改成Gua，
+对与fn append_dizhi、fn append_wuxing和fn append_liuqin中使用的参数gua_xian: &mut [String]都改成Gua的数据(fn process_gua的参数xiang: &mut Vec<String>也改成Gua的数据，在fn generate_gua_xian调用时分别传入zheng_gua和bian_gua)，
+里面使用了format的添加操作替换成把对应的数据放到Gua中，
+fn generate_gua_xian中zheng_gua的追加冲合关系和bian_gua追加卦名的操作前先读取zheng_gua和bian_gua数据把format放到这里完成，
+最终达到展现的效果不变，zheng_gua和bian_gua都用改成Gua的数据类型
+---
+五行的生克关系如下：
+木生火，火生土，土生金，金生水，水生木  
+木克土，土克水，水克火，火克金，金克木  
+地支的五行属性如下：
+| 地支 | 五行 |
+|------|------|
+| 子   | 水   |
+| 丑   | 土   |
+| 寅   | 木   |
+| 卯   | 木   |
+| 辰   | 土   |
+| 巳   | 火   |
+| 午   | 火   |
+| 未   | 土   |
+| 申   | 金   |
+| 酉   | 金   |
+| 戌   | 土   |
+| 亥   | 水   |
+现在需要添加一个判断生克的函数get_sheng_ke_relation，传入的参数是两个五行就直接判断，传入的参数如果存在地支，就先转化为五行再判断(格式参考原来判断冲合的get_chong_he_relation，判断部分可以参考append_liu_qin)。
+然后在格式化正卦的每一爻的时候调研该函数追加上月和日的生克关系
+---
 添加变卦的回头生克冲合。
 世应的确定改成在六十四卦结构体中直接拿取节省开销，世应的位置在游魂归魂等卦是固定的，可以写到结构体的默认值中。
 
