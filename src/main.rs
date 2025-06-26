@@ -45,7 +45,37 @@ struct GuaResponse {
     hour_ganzhi: String,
 }
 
+// 存储一个完整卦的所有信息
+#[derive(Debug)]
+struct Gua {
+    yao_xiang: [String; 6],    // 爻象, e.g., ["⚊", "⚋ o", ...]
+    index_str: String,         // 卦的数字索引, e.g., "122111"
+    shi_idx: Option<usize>,    // 世爻索引
+    ying_idx: Option<usize>,   // 应爻索引
+    dizhi: [&'static str; 6],  // 每爻的地支
+    wuxing: [&'static str; 6], // 每爻的五行
+    liuqin: [&'static str; 6], // 每爻的六亲
+    palace_name: &'static str, // 卦名，e.g., "天风姤"
+}
+
+impl Gua {
+    // 创建一个新的、未填充的Gua实例
+    fn new(yao_xiang: [String; 6], index_str: String) -> Self {
+        Gua {
+            yao_xiang,
+            index_str,
+            shi_idx: None,
+            ying_idx: None,
+            dizhi: [""; 6],
+            wuxing: [""; 6],
+            liuqin: [""; 6],
+            palace_name: "未知卦",
+        }
+    }
+}
+
 struct SixtyFourGua {
+    // name: &'static str,
     index: &'static str,
     nei_dizhi: [&'static str; 3],
     nei_wuxing: [&'static str; 3],
@@ -237,33 +267,60 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
 
 //获取干支信息，例如乙巳年 辛巳月 壬辰日 申时
 fn get_ganzhi_info() -> (String, String, String, String) {
-    //获取本地的日期和时间
     let now = Local::now();
     let current_solar = solar::from_ymdhms(
-        now.year() as i64,   // Cast i32 to i64
-        now.month() as i64,  // Cast u32 to i64
-        now.day() as i64,    // Cast u32 to i64
-        now.hour() as i64,   // Cast u32 to i64
-        now.minute() as i64, // Cast u32 to i64
-        now.second() as i64, // Cast u32 to i64
+        now.year() as i64,
+        now.month() as i64,
+        now.day() as i64,
+        now.hour() as i64,
+        now.minute() as i64,
+        now.second() as i64,
     );
-    //转换成lunar可以识别的日期
     let current_lunar = current_solar.get_lunar();
-    //获取干支信息
-    let year_ganzhi = current_lunar.get_year_in_gan_zhi();
-    let month_ganzhi = current_lunar.get_month_in_gan_zhi();
-    let day_ganzhi = current_lunar.get_day_in_gan_zhi();
-    let hour_ganzhi = current_lunar.get_time_zhi();
-    //返回干支信息
-    (year_ganzhi, month_ganzhi, day_ganzhi, hour_ganzhi)
+    (
+        current_lunar.get_year_in_gan_zhi(),
+        current_lunar.get_month_in_gan_zhi(),
+        current_lunar.get_day_in_gan_zhi(),
+        current_lunar.get_time_zhi(),
+    )
 }
 
-// 确定世爻和应爻的位置
-fn determine_shi_ying_indices(
-    nei: &[String],
-    wai: &[String],
-    gua_xian: &mut Vec<String>,
-) -> (usize, usize) {
+// 判断地支之间的冲合关系
+fn get_chong_he_relation(dizhi1: &str, dizhi2: &str) -> Option<&'static str> {
+    match (dizhi1, dizhi2) {
+        ("子", "午")
+        | ("午", "子")
+        | ("丑", "未")
+        | ("未", "丑")
+        | ("寅", "申")
+        | ("申", "寅")
+        | ("卯", "酉")
+        | ("酉", "卯")
+        | ("辰", "戌")
+        | ("戌", "辰")
+        | ("巳", "亥")
+        | ("亥", "巳") => Some("冲"),
+        ("子", "丑")
+        | ("丑", "子")
+        | ("寅", "亥")
+        | ("亥", "寅")
+        | ("卯", "戌")
+        | ("戌", "卯")
+        | ("辰", "酉")
+        | ("酉", "辰")
+        | ("巳", "申")
+        | ("申", "巳")
+        | ("午", "未")
+        | ("未", "午") => Some("合"),
+        _ => None,
+    }
+}
+
+// 确定世应并填充 (仅用于正卦)
+fn determine_shi_ying_indices(gua: &mut Gua) {
+    let nei: Vec<char> = gua.index_str.chars().take(3).collect();
+    let wai: Vec<char> = gua.index_str.chars().skip(3).take(3).collect();
+
     let (shi_idx, ying_idx) = if nei[2] == wai[2] && nei[0] != wai[0] && nei[1] != wai[1] {
         (1, 4)
     } else if nei[2] != wai[2] && nei[0] == wai[0] && nei[1] == wai[1] {
@@ -281,64 +338,44 @@ fn determine_shi_ying_indices(
     } else {
         (2, 5)
     };
-    // 追加世爻和应爻的标记
-    gua_xian[shi_idx].push_str(" 世");
-    gua_xian[ying_idx].push_str(" 应");
-    //把世和应的索引返回用于判断是否存在冲克关系
-    (shi_idx, ying_idx)
+
+    gua.shi_idx = Some(shi_idx);
+    gua.ying_idx = Some(ying_idx);
 }
 
-// 追加地支
-fn append_dizhi(nei: &[String], wai: &[String], gua_xian: &mut Vec<String>) {
-    let nei_index: String = nei.join("");
-    let wai_index: String = wai.join("");
-    // 匹配HunTian结构体的index，获取nei和wai的地支
-    let hun_tian_nei = SIXTYFOURGUA_DATA
-        .iter()
-        .find(|&h| h.index == nei_index)
-        .unwrap();
-    let hun_tian_wai = SIXTYFOURGUA_DATA
-        .iter()
-        .find(|&h| h.index == wai_index)
-        .unwrap();
-    // 将nei的地支添加到gua_xian的前三个元素
-    for i in 0..3 {
-        gua_xian[i] = format!("{}{}", hun_tian_nei.nei_dizhi[i], gua_xian[i]);
-    }
-    // 将wai的地支添加到gua_xian的后三个元素
-    for i in 0..3 {
-        gua_xian[i + 3] = format!("{}{}", hun_tian_wai.wai_dizhi[i], gua_xian[i + 3]);
+// 填充五行
+fn append_wuxing(gua: &mut Gua) {
+    let (nei_index, wai_index) = gua.index_str.split_at(3);
+    if let (Some(hun_tian_nei), Some(hun_tian_wai)) = (
+        SIXTYFOURGUA_DATA.iter().find(|h| h.index == nei_index),
+        SIXTYFOURGUA_DATA.iter().find(|h| h.index == wai_index),
+    ) {
+        for i in 0..3 {
+            gua.wuxing[i] = hun_tian_nei.nei_wuxing[i];
+            gua.wuxing[i + 3] = hun_tian_wai.wai_wuxing[i];
+        }
     }
 }
 
-// 追加五行
-fn append_wuxing(nei: &[String], wai: &[String], gua_xian: &mut Vec<String>) {
-    let nei_index: String = nei.join("");
-    let wai_index: String = wai.join("");
-    // 匹配HunTian结构体的index，获取nei和wai的五行
-    let hun_tian_nei = SIXTYFOURGUA_DATA
-        .iter()
-        .find(|&h| h.index == nei_index)
-        .unwrap();
-    let hun_tian_wai = SIXTYFOURGUA_DATA
-        .iter()
-        .find(|&h| h.index == wai_index)
-        .unwrap();
-    // 将nei的五行添加到gua_xian的前三个元素
-    for i in 0..3 {
-        gua_xian[i] = format!("{}{}", hun_tian_nei.nei_wuxing[i], gua_xian[i]);
-    }
-    // 将wai的五行添加到gua_xian的后三个元素
-    for i in 0..3 {
-        gua_xian[i + 3] = format!("{}{}", hun_tian_wai.wai_wuxing[i], gua_xian[i + 3]);
+// 填充地支
+fn append_dizhi(gua: &mut Gua) {
+    let (nei_index, wai_index) = gua.index_str.split_at(3);
+    if let (Some(hun_tian_nei), Some(hun_tian_wai)) = (
+        SIXTYFOURGUA_DATA.iter().find(|h| h.index == nei_index),
+        SIXTYFOURGUA_DATA.iter().find(|h| h.index == wai_index),
+    ) {
+        for i in 0..3 {
+            gua.dizhi[i] = hun_tian_nei.nei_dizhi[i];
+            gua.dizhi[i + 3] = hun_tian_wai.wai_dizhi[i];
+        }
     }
 }
 
-// 六亲判断方法
-fn append_liuqin(palace_element: &str, gua_xian: &mut [String]) {
-    for i in 0..gua_xian.len() {
-        let current_wuxing = gua_xian[i].chars().nth(1).unwrap();
-        let liuqin = match (palace_element, current_wuxing) {
+// 填充六亲 (依赖五行和宫位五行)
+fn append_liuqin(gua: &mut Gua, palace_element: &str) {
+    for i in 0..6 {
+        let wuxing_char = gua.wuxing[i].chars().next().unwrap_or(' ');
+        let liuqin = match (palace_element, wuxing_char) {
             ("金", '金') => "兄弟",
             ("金", '水') => "子孙",
             ("金", '木') => "妻财",
@@ -366,74 +403,105 @@ fn append_liuqin(palace_element: &str, gua_xian: &mut [String]) {
             ("土", '火') => "父母",
             _ => "未知",
         };
-        gua_xian[i] = format!("{}{}", liuqin, gua_xian[i]);
+        gua.liuqin[i] = liuqin;
     }
 }
 
 //找到卦宫对应的五行属性用于判断六亲
-fn find_palace_element(zheng_gua: &str) -> Option<&'static str> {
+fn find_palace_element(gua_index: &str) -> Option<&'static str> {
     SIXTYFOURGUA_DATA.iter().find_map(|gua| {
         gua.gua_index
             .iter()
-            .find(|&&idx| idx == zheng_gua)
-            .map(|_| gua.palace_element)
+            .any(|&idx| idx == gua_index)
+            .then_some(gua.palace_element)
     })
 }
 
 //查找对应的卦宫名称
-fn find_palace_name(zheng_gua: &str) -> Option<&'static str> {
+fn find_palace_name(gua_index: &str) -> Option<&'static str> {
     SIXTYFOURGUA_DATA.iter().find_map(|gua| {
         gua.gua_index
             .iter()
-            .position(|&idx| idx == zheng_gua)
+            .position(|&idx| idx == gua_index)
             .map(|pos| gua.gua_name[pos])
     })
 }
 
 //处理卦
-fn process_gua<'a>(
-    gua_num: &'a [String],
-    xiang: &mut Vec<String>,
-    palace_element: &str,
-) -> (&'a [String], &'a [String]) {
-    // nei表示内卦，wai表示外卦
-    let (nei, wai) = gua_num.split_at(3);
-    // 从右往左追加五行和地支
-    append_wuxing(nei, wai, xiang);
-    append_dizhi(nei, wai, xiang);
-    // 追加六亲
-    append_liuqin(palace_element, xiang);
-    // 返回内外卦数字用于判断世应等操作
-    (nei, wai)
+fn process_gua(gua: &mut Gua, palace_element: &'static str) {
+    // 正卦和变卦的六亲都是根据正卦的宫位五行来定的，所以 palace_element 需要传入
+    append_dizhi(gua);
+    append_wuxing(gua);
+    append_liuqin(gua, palace_element);
+    gua.palace_name = find_palace_name(&gua.index_str).unwrap_or("未知卦");
 }
 
-// 判断地支之间的冲合关系
-fn get_chong_he_relation(dizhi1: &str, dizhi2: &str) -> Option<&'static str> {
-    match (dizhi1, dizhi2) {
-        ("子", "午") | ("午", "子") => Some("冲"),
-        ("丑", "未") | ("未", "丑") => Some("冲"),
-        ("寅", "申") | ("申", "寅") => Some("冲"),
-        ("卯", "酉") | ("酉", "卯") => Some("冲"),
-        ("辰", "戌") | ("戌", "辰") => Some("冲"),
-        ("巳", "亥") | ("亥", "巳") => Some("冲"),
-        ("子", "丑") | ("丑", "子") => Some("合"),
-        ("寅", "亥") | ("亥", "寅") => Some("合"),
-        ("卯", "戌") | ("戌", "卯") => Some("合"),
-        ("辰", "酉") | ("酉", "辰") => Some("合"),
-        ("巳", "申") | ("申", "巳") => Some("合"),
-        ("午", "未") | ("未", "午") => Some("合"),
-        _ => None,
+async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
+    let numbers = &req.numbers;
+    // 获取干支信息
+    let (year_ganzhi, month_ganzhi, day_ganzhi, hour_ganzhi) = get_ganzhi_info();
+
+    // 1. === 初始化正卦 (Zheng Gua) ===
+    let mut zheng_yao_xiang = [
+        String::new(),
+        String::new(),
+        String::new(),
+        String::new(),
+        String::new(),
+        String::new(),
+    ];
+    let mut zheng_index_vec = Vec::with_capacity(6);
+    for (i, c) in numbers.chars().enumerate() {
+        let (yao, index_char) = match c {
+            '0' => ("⚋ x".to_string(), "2"),
+            '1' => ("⚊".to_string(), "1"),
+            '2' => ("⚋".to_string(), "2"),
+            '3' => ("⚊ o".to_string(), "1"),
+            _ => ("".to_string(), ""),
+        };
+        if i < 6 {
+            zheng_yao_xiang[i] = yao;
+        }
+        zheng_index_vec.push(index_char);
     }
-}
+    let mut zheng_gua = Gua::new(zheng_yao_xiang, zheng_index_vec.join(""));
 
-// 追加冲合关系到正卦对应爻
-fn append_chong_he_relations(
-    zheng_xiang: &mut Vec<String>,
-    // shi_ying_dong: Vec<usize>,
-    month_ganzhi: &str,
-    day_ganzhi: &str,
-) {
-    //获取月和日的地支
+    // 2. === 初始化变卦 (Bian Gua) ===
+    let mut bian_yao_xiang = [
+        String::new(),
+        String::new(),
+        String::new(),
+        String::new(),
+        String::new(),
+        String::new(),
+    ];
+    let mut bian_index_vec = Vec::with_capacity(6);
+    for (i, c) in numbers.chars().enumerate() {
+        let (yao, index_char) = match c {
+            '0' => ("⚊".to_string(), "1"),
+            '1' => ("⚊".to_string(), "1"),
+            '2' => ("⚋".to_string(), "2"),
+            '3' => ("⚋".to_string(), "2"),
+            _ => ("".to_string(), ""),
+        };
+        if i < 6 {
+            bian_yao_xiang[i] = yao;
+        }
+        bian_index_vec.push(index_char);
+    }
+    let mut bian_gua = Gua::new(bian_yao_xiang, bian_index_vec.join(""));
+
+    // 3. === 数据处理和填充 ===
+    let palace_element = find_palace_element(&zheng_gua.index_str).unwrap_or("未知");
+
+    // 处理正卦
+    process_gua(&mut zheng_gua, palace_element);
+    determine_shi_ying_indices(&mut zheng_gua); // 世应只在正卦上
+
+    // 处理变卦 (使用正卦的宫位五行)
+    process_gua(&mut bian_gua, palace_element);
+
+    // 获取月和日的地支
     let month_dizhi = month_ganzhi
         .chars()
         .nth(1)
@@ -444,119 +512,45 @@ fn append_chong_he_relations(
         .nth(1)
         .map(|c| &day_ganzhi[c.len_utf8()..])
         .unwrap_or("");
-    // for (i, gua) in zheng_xiang.iter_mut().enumerate() {
-    for gua in zheng_xiang.iter_mut() {
-        //获取卦的地支
-        let dizhi: String = gua
-            .chars()
-            .nth(2)
-            .map(|c| c.to_string())
-            .unwrap_or_default();
-        // if shi_ying_dong.contains(&i) {
-        //判断世爻、应爻、动爻对于日月的冲合关系
-        if let Some(relation) = get_chong_he_relation(&dizhi, month_dizhi) {
-            gua.push_str(&format!(" 月{}", relation));
+
+    // 4. === 格式化最终输出 ===
+    let mut combined_lines = Vec::with_capacity(7);
+
+    for i in 0..6 {
+        // 格式化正卦的每一爻
+        let mut zheng_line = format!(
+            "{}{}{}{}",
+            zheng_gua.liuqin[i], zheng_gua.dizhi[i], zheng_gua.wuxing[i], zheng_gua.yao_xiang[i]
+        );
+        if zheng_gua.shi_idx == Some(i) {
+            zheng_line.push_str(" 世");
         }
-        if let Some(relation) = get_chong_he_relation(&dizhi, day_dizhi) {
-            gua.push_str(&format!(" 日{}", relation));
+        if zheng_gua.ying_idx == Some(i) {
+            zheng_line.push_str(" 应");
         }
-        // }
-    }
-}
+        if let Some(relation) = get_chong_he_relation(zheng_gua.dizhi[i], month_dizhi) {
+            zheng_line.push_str(&format!(" 月{}", relation));
+        }
+        if let Some(relation) = get_chong_he_relation(zheng_gua.dizhi[i], day_dizhi) {
+            zheng_line.push_str(&format!(" 日{}", relation));
+        }
 
-async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
-    let numbers = &req.numbers;
-    let mut zheng_xiang = Vec::new();
-    // 获取干支信息
-    let (year_ganzhi, month_ganzhi, day_ganzhi, hour_ganzhi) = get_ganzhi_info();
+        // 格式化变卦的每一爻
+        let bian_line = format!(
+            "{}{}{}{}",
+            bian_gua.liuqin[i], bian_gua.dizhi[i], bian_gua.wuxing[i], bian_gua.yao_xiang[i]
+        );
 
-    // 需要绘制的正卦卦象
-    for c in numbers.chars() {
-        let gua = match c {
-            '0' => "⚋ x".to_string(),
-            '1' => "⚊".to_string(),
-            '2' => "⚋".to_string(),
-            '3' => "⚊ o".to_string(),
-            _ => "".to_string(),
-        };
-        zheng_xiang.push(gua);
+        combined_lines.push(format!("{}\t{}", zheng_line, bian_line));
     }
-    //删除变卦符号的正卦
-    let mut zheng_gua = Vec::new();
-    for c in numbers.chars() {
-        let gua = match c {
-            '0' => "2".to_string(),
-            '1' => "1".to_string(),
-            '2' => "2".to_string(),
-            '3' => "1".to_string(),
-            _ => "".to_string(),
-        };
-        zheng_gua.push(gua);
-    }
-    // 获取卦宫五行
-    let palace_element = find_palace_element(&(zheng_gua.join(""))).unwrap_or("未知");
-    // 处理正卦(卦象添加地支、五行和六亲)
-    let (nei, wai) = process_gua(&zheng_gua, &mut zheng_xiang, palace_element);
-    // 确定世爻和应爻的位置
-    // let (shi_idx, ying_idx) =
-    determine_shi_ying_indices(nei, wai, &mut zheng_xiang);
-    // 需要判断冲克关系的爻的索引(世爻、应爻、动爻)考虑到暗动改成所有爻都判断
-    // let mut shi_ying_dong: Vec<usize> = numbers
-    //     .chars()
-    //     .enumerate()
-    //     .filter(|&(_, c)| c == '0' || c == '3')
-    //     .map(|(i, _)| i)
-    //     .collect();
-    // shi_ying_dong.push(shi_idx);
-    // shi_ying_dong.push(ying_idx);
-    // 追加冲合关系
-    append_chong_he_relations(
-        &mut zheng_xiang,
-        // shi_ying_dong,
-        &month_ganzhi,
-        &day_ganzhi,
-    );
-    //追加卦名
-    if let Some(name) = find_palace_name(&zheng_gua.join("")) {
-        zheng_xiang.push(name.to_string());
-    }
+    // 添加最后的卦名行
+    combined_lines.push(format!(
+        "{}\t{}",
+        zheng_gua.palace_name, bian_gua.palace_name
+    ));
 
-    //根据动爻生成变卦
-    let mut bian_gua = Vec::new();
-    for c in numbers.chars() {
-        let gua = match c {
-            '0' => "1".to_string(),
-            '1' => "1".to_string(),
-            '2' => "2".to_string(),
-            '3' => "2".to_string(),
-            _ => "".to_string(),
-        };
-        bian_gua.push(gua);
-    }
-    // 需要绘制的变卦
-    let mut bian_xiang = Vec::new();
-    for num in &bian_gua {
-        let gua = match num.as_str() {
-            "1" => "⚊".to_string(),
-            "2" => "⚋".to_string(),
-            _ => "".to_string(),
-        };
-        bian_xiang.push(gua);
-    }
-    //处理变卦
-    process_gua(&bian_gua, &mut bian_xiang, palace_element);
-    //追加卦名
-    if let Some(name) = find_palace_name(&bian_gua.join("")) {
-        bian_xiang.push(name.to_string());
-    }
-    // 把正卦和变卦拼接起来
-    let mut combined = Vec::new();
-    for (gua, bian) in zheng_xiang.iter().zip(bian_xiang.iter()) {
-        combined.push(format!("{}\t{}", gua, bian));
-    }
-    //json格式
     HttpResponse::Ok().json(GuaResponse {
-        gua_xian: combined,
+        gua_xian: combined_lines,
         year_ganzhi,
         month_ganzhi,
         day_ganzhi,
