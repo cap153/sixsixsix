@@ -62,34 +62,31 @@ async function generateGuaXiang() {
             addWuxingColorClass(span, part.branchChar);
             ganzhiInfoDiv.appendChild(span);
             if (index < ganzhiParts.length - 1) {
-                // Add a space between parts, which will not be colored by wuxing classes
                 ganzhiInfoDiv.appendChild(document.createTextNode(' '));
             }
         });
         guaDiagram.appendChild(ganzhiInfoDiv);
 
         data.gua_xian.reverse().forEach((gua, index) => {
-            // 将正卦和变卦分开
             const [zhengGua, bianGua] = gua.split('\t');
 
             const guaDiv = document.createElement('div');
             guaDiv.style.display = 'flex';
             
-            // 创建正卦div
             const zhengDiv = document.createElement('div');
-            zhengDiv.textContent = zhengGua;
-            
-            // 创建变卦div
             const bianDiv = document.createElement('div');
-            bianDiv.textContent = bianGua;
 
-            // 卦名使用黑色
-            if (index === 0) {
+            if (index === 0) { // 卦名行，使用 textContent 即可
+                zhengDiv.textContent = zhengGua;
+                bianDiv.textContent = bianGua;
                 zhengDiv.style.cssText = 'text-align: center; color: black; flex: 1';
                 bianDiv.style.cssText = 'text-align: center; color: black; flex: 1';
-            } else {
+            } else { // 爻辞行，需要处理 HTML
                 zhengDiv.style.flex = '1';
                 bianDiv.style.flex = '1';
+                // 使用 innerHTML 替代 textContent 来渲染 HTML 标签
+                zhengDiv.innerHTML = zhengGua;
+                bianDiv.innerHTML = bianGua;
                 addWuxingColorClass(zhengDiv, zhengGua.charAt(2));
                 addWuxingColorClass(bianDiv, bianGua.charAt(2));
             }
