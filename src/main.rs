@@ -571,10 +571,10 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
             zheng_gua.liuqin[i], zheng_gua.dizhi[i], zheng_gua.wuxing[i], zheng_gua.yao_xiang[i]
         );
         if zheng_gua.shi_idx == Some(i) {
-            zheng_line.push_str("<span style='color:black;'>世</span>"); 
+            zheng_line.push_str("<div style='color:black;'>世</div>"); 
         }
         if zheng_gua.ying_idx == Some(i) {
-            zheng_line.push_str("<span style='color:black;'>应</span>"); 
+            zheng_line.push_str("<div style='color:black;'>应</div>"); 
         }
         // 判断并追加冲合关系 (月对爻)
         if let Some(relation) = get_chong_he_relation(zheng_gua.dizhi[i], month_dizhi) {
