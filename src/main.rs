@@ -6,7 +6,212 @@ use lunar_rust::{
     solar::{self, SolarRefHelper},
 };
 use rust_embed::RustEmbed;
-use serde::{Deserialize, Serialize}; // For getting the current time
+use serde::{Deserialize, Serialize};
+use std::fmt::{self, Display};
+
+/// 表示五行（金、木、水、火、土）。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum WuXing {
+    Jin,
+    Mu,
+    Shui,
+    Huo,
+    Tu,
+}
+
+// 实现 Display trait，用于将五行枚举转换为可打印的汉字字符串（如“金”）。
+impl Display for WuXing {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                WuXing::Jin => "金",
+                WuXing::Mu => "木",
+                WuXing::Shui => "水",
+                WuXing::Huo => "火",
+                WuXing::Tu => "土",
+            }
+        )
+    }
+}
+
+/// 表示十二地支（子、丑、寅等）。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum DiZhi {
+    Zi, Chou, Yin, Mao, Chen, Si,
+    Wu, Wei, Shen, You, Xu, Hai,
+}
+
+impl DiZhi {
+    /// 根据地支推算其对应的五行。
+    /// 这是核心规则之一，将地支与五行关联起来。
+    fn wuxing(&self) -> WuXing {
+        match self {
+            DiZhi::Zi | DiZhi::Hai => WuXing::Shui,
+            DiZhi::Yin | DiZhi::Mao => WuXing::Mu,
+            DiZhi::Si | DiZhi::Wu => WuXing::Huo,
+            DiZhi::Shen | DiZhi::You => WuXing::Jin,
+            DiZhi::Chen | DiZhi::Xu | DiZhi::Chou | DiZhi::Wei => WuXing::Tu,
+        }
+    }
+}
+
+// 实现 TryFrom<&str> trait，用于安全地从字符串（如"子"）创建DiZhi枚举。
+// 主要用于处理从lunar_rust库获取的干支字符串。
+impl TryFrom<&str> for DiZhi {
+    type Error = &'static str;
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
+        match s {
+            "子" => Ok(DiZhi::Zi), "丑" => Ok(DiZhi::Chou),
+            "寅" => Ok(DiZhi::Yin), "卯" => Ok(DiZhi::Mao),
+            "辰" => Ok(DiZhi::Chen), "巳" => Ok(DiZhi::Si),
+            "午" => Ok(DiZhi::Wu), "未" => Ok(DiZhi::Wei),
+            "申" => Ok(DiZhi::Shen), "酉" => Ok(DiZhi::You),
+            "戌" => Ok(DiZhi::Xu), "亥" => Ok(DiZhi::Hai),
+            _ => Err("Invalid DiZhi string"),
+        }
+    }
+}
+
+// 实现 Display trait，用于将地支枚举转换为可打印的汉字字符串（如“子”）。
+impl Display for DiZhi {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                DiZhi::Zi => "子", DiZhi::Chou => "丑",
+                DiZhi::Yin => "寅", DiZhi::Mao => "卯",
+                DiZhi::Chen => "辰", DiZhi::Si => "巳",
+                DiZhi::Wu => "午", DiZhi::Wei => "未",
+                DiZhi::Shen => "申", DiZhi::You => "酉",
+                DiZhi::Xu => "戌", DiZhi::Hai => "亥",
+            }
+        )
+    }
+}
+
+/// 表示六亲（兄弟、子孙、妻财、官鬼、父母）。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum LiuQin {
+    XiongDi,
+    ZiSun,
+    QiCai,
+    GuanGui,
+    FuMu,
+}
+
+// 实现 Display trait，用于将六亲枚举转换为可打印的汉字字符串（如“兄弟”）。
+impl Display for LiuQin {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                LiuQin::XiongDi => "兄弟",
+                LiuQin::ZiSun => "子孙",
+                LiuQin::QiCai => "妻财",
+                LiuQin::GuanGui => "官鬼",
+                LiuQin::FuMu => "父母",
+            }
+        )
+    }
+}
+
+/// 表示爻的四种状态（动爻与静爻）。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Yao {
+    YinChanging,  // 0 -> ⚋ x (老阴，变阳)
+    YangStatic,   // 1 -> ⚊   (少阳，不变)
+    YinStatic,    // 2 -> ⚋   (少阴，不变)
+    YangChanging, // 3 -> ⚊ o  (老阳，变阴)
+}
+
+impl Yao {
+    /// 获取爻的图形表示（如 "⚊" 或 "⚋ x"）。
+    fn xiang(&self) -> &'static str {
+        match self {
+            Yao::YinChanging => "⚋ x",
+            Yao::YangStatic => "⚊",
+            Yao::YinStatic => "⚋",
+            Yao::YangChanging => "⚊ o",
+        }
+    }
+    
+    /// 获取爻对应的数字索引字符（'1'代表阳，'2'代表阴）。
+    /// 用于构成卦的六位数字索引，例如 "111111"。
+    fn index_char(&self) -> char {
+        match self {
+            Yao::YinChanging | Yao::YinStatic => '2',
+            Yao::YangStatic | Yao::YangChanging => '1',
+        }
+    }
+    
+    /// 获取此爻变化后的爻（动爻变为其相反的静爻，静爻不变）。
+    /// 用于从正卦计算变卦。
+    fn to_bian_yao(&self) -> Self {
+        match self {
+            Yao::YinChanging => Yao::YangStatic,
+            Yao::YangChanging => Yao::YinStatic,
+            static_yao => *static_yao, // 不变的爻保持原样
+        }
+    }
+}
+
+// 实现 From<char> trait，用于从前端传入的字符（'0'~'3'）直接创建Yao枚举。
+impl From<char> for Yao {
+    fn from(c: char) -> Self {
+        match c {
+            '0' => Yao::YinChanging,
+            '1' => Yao::YangStatic,
+            '2' => Yao::YinStatic,
+            '3' => Yao::YangChanging,
+            // 在实际应用中，这里可以返回Result而不是panic，但对于内部逻辑此方式更简洁
+            _ => panic!("Invalid character for Yao conversion"),
+        }
+    }
+}
+
+/// 表示地支间的冲或合关系。
+#[derive(Debug, Clone, Copy)]
+enum ChongHe {
+    Chong,
+    He,
+}
+// 实现 Display trait，用于打印 "冲" 或 "合"。
+impl Display for ChongHe {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                ChongHe::Chong => "冲",
+                ChongHe::He => "合",
+            }
+        )
+    }
+}
+
+/// 表示五行间的生或克关系。
+#[derive(Debug, Clone, Copy)]
+enum ShengKe {
+    Sheng,
+    Ke,
+}
+// 实现 Display trait，用于打印 "生" 或 "克"。
+impl Display for ShengKe {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                ShengKe::Sheng => "生",
+                ShengKe::Ke => "克",
+            }
+        )
+    }
+}
 
 // 嵌入整个 static 目录（递归所有文件）
 #[derive(RustEmbed)]
@@ -48,40 +253,43 @@ struct GuaResponse {
 // 存储一个完整卦的所有信息
 #[derive(Debug)]
 struct Gua {
-    yao_xiang: [String; 6],    // 爻象, e.g., ["⚊", "⚋ o", ...]
+    yao_xiang: [Yao; 6],       // 爻象, e.g., ["⚊", "⚋ o", ...]
     index_str: String,         // 卦的数字索引, e.g., "122111"
     shi_idx: Option<usize>,    // 世爻索引
     ying_idx: Option<usize>,   // 应爻索引
-    dizhi: [&'static str; 6],  // 每爻的地支
-    wuxing: [&'static str; 6], // 每爻的五行
-    liuqin: [&'static str; 6], // 每爻的六亲
+    dizhi: [DiZhi; 6],         // 每爻的地支
+    wuxing: [WuXing; 6],       // 每爻的五行
+    liuqin: [LiuQin; 6],       // 每爻的六亲
     palace_name: &'static str, // 卦名，e.g., "天风姤"
 }
 
 impl Gua {
     // 创建一个新的、未填充的Gua实例
-    fn new(yao_xiang: [String; 6], index_str: String) -> Self {
+    fn new(yao_xiang: [Yao; 6]) -> Self {
+        let index_str = yao_xiang.iter().map(|y| y.index_char()).collect();
         Gua {
             yao_xiang,
             index_str,
             shi_idx: None,
             ying_idx: None,
-            dizhi: [""; 6],
-            wuxing: [""; 6],
-            liuqin: [""; 6],
+            // 使用 Copy 特性可以直接创建数组，无需手动填充
+            dizhi: [DiZhi::Zi; 6],
+            wuxing: [WuXing::Jin; 6],
+            liuqin: [LiuQin::XiongDi; 6],
             palace_name: "未知卦",
         }
     }
 }
 
+// 存储六十四卦要用到的信息
 struct SixtyFourGua {
     // name: &'static str,
     index: &'static str,
-    nei_dizhi: [&'static str; 3],
-    nei_wuxing: [&'static str; 3],
-    wai_dizhi: [&'static str; 3],
-    wai_wuxing: [&'static str; 3],
-    palace_element: &'static str,
+    nei_dizhi: [DiZhi; 3],   
+    // nei_wuxing: [WuXing; 3], 
+    wai_dizhi: [DiZhi; 3],   
+    // wai_wuxing: [WuXing; 3], 
+    palace_element: WuXing,  
     gua_name: [&'static str; 8],
     gua_index: [&'static str; 8],
 }
@@ -90,11 +298,11 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
     SixtyFourGua {
         // name: "乾",
         index: "111",
-        nei_dizhi: ["子", "寅", "辰"],
-        nei_wuxing: ["水", "木", "土"],
-        wai_dizhi: ["午", "申", "戌"],
-        wai_wuxing: ["火", "金", "土"],
-        palace_element: "金",
+        nei_dizhi: [DiZhi::Zi, DiZhi::Yin, DiZhi::Chen],
+        // nei_wuxing: [WuXing::Shui, WuXing::Mu, WuXing::Tu],
+        wai_dizhi: [DiZhi::Wu, DiZhi::Shen, DiZhi::Xu],
+        // wai_wuxing: [WuXing::Huo, WuXing::Jin, WuXing::Tu],
+        palace_element: WuXing::Jin,
         gua_name: [
             "乾为天䷀(六冲)",
             "天风姤䷫",
@@ -112,11 +320,11 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
     SixtyFourGua {
         // name: "震",
         index: "122",
-        nei_dizhi: ["子", "寅", "辰"],
-        nei_wuxing: ["水", "木", "土"],
-        wai_dizhi: ["午", "申", "戌"],
-        wai_wuxing: ["火", "金", "土"],
-        palace_element: "木",
+        nei_dizhi: [DiZhi::Zi, DiZhi::Yin, DiZhi::Chen],
+        // nei_wuxing: [WuXing::Shui, WuXing::Mu, WuXing::Tu],
+        wai_dizhi: [DiZhi::Wu, DiZhi::Shen, DiZhi::Xu],
+        // wai_wuxing: [WuXing::Huo, WuXing::Jin, WuXing::Tu],
+        palace_element: WuXing::Mu,
         gua_name: [
             "震为雷䷲(六冲)",
             "雷地豫䷏(六合)",
@@ -134,11 +342,11 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
     SixtyFourGua {
         // name: "坎",
         index: "212",
-        nei_dizhi: ["寅", "辰", "午"],
-        nei_wuxing: ["木", "土", "火"],
-        wai_dizhi: ["申", "戌", "子"],
-        wai_wuxing: ["金", "土", "水"],
-        palace_element: "水",
+        nei_dizhi: [DiZhi::Yin, DiZhi::Chen, DiZhi::Wu],
+        // nei_wuxing: [WuXing::Mu, WuXing::Tu, WuXing::Huo],
+        wai_dizhi: [DiZhi::Shen, DiZhi::Xu, DiZhi::Zi],
+        // wai_wuxing: [WuXing::Jin, WuXing::Tu, WuXing::Shui],
+        palace_element: WuXing::Shui,
         gua_name: [
             "坎为水䷜(六冲)",
             "水泽节䷻(六合)",
@@ -156,11 +364,11 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
     SixtyFourGua {
         // name: "艮",
         index: "221",
-        nei_dizhi: ["辰", "午", "申"],
-        nei_wuxing: ["土", "火", "金"],
-        wai_dizhi: ["戌", "子", "寅"],
-        wai_wuxing: ["土", "水", "木"],
-        palace_element: "土",
+        nei_dizhi: [DiZhi::Chen, DiZhi::Wu, DiZhi::Shen],
+        // nei_wuxing: [WuXing::Tu, WuXing::Huo, WuXing::Jin],
+        wai_dizhi: [DiZhi::Xu, DiZhi::Zi, DiZhi::Yin],
+        // wai_wuxing: [WuXing::Tu, WuXing::Shui, WuXing::Mu],
+        palace_element: WuXing::Tu,
         gua_name: [
             "艮为山䷳(六冲)",
             "山火贲䷕(六合)",
@@ -178,11 +386,11 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
     SixtyFourGua {
         // name: "坤",
         index: "222",
-        nei_dizhi: ["未", "巳", "卯"],
-        nei_wuxing: ["土", "火", "木"],
-        wai_dizhi: ["丑", "亥", "酉"],
-        wai_wuxing: ["土", "水", "金"],
-        palace_element: "土",
+        nei_dizhi: [DiZhi::Wei, DiZhi::Si, DiZhi::Mao],
+        // nei_wuxing: [WuXing::Tu, WuXing::Huo, WuXing::Mu],
+        wai_dizhi: [DiZhi::Chou, DiZhi::Hai, DiZhi::You],
+        // wai_wuxing: [WuXing::Tu, WuXing::Shui, WuXing::Jin],
+        palace_element: WuXing::Tu,
         gua_name: [
             "坤为地䷁(六冲)",
             "地雷复䷗(六合)",
@@ -200,11 +408,11 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
     SixtyFourGua {
         // name: "巽",
         index: "211",
-        nei_dizhi: ["丑", "亥", "酉"],
-        nei_wuxing: ["土", "水", "金"],
-        wai_dizhi: ["未", "巳", "卯"],
-        wai_wuxing: ["土", "火", "木"],
-        palace_element: "木",
+        nei_dizhi: [DiZhi::Chou, DiZhi::Hai, DiZhi::You],
+        // nei_wuxing: [WuXing::Tu, WuXing::Shui, WuXing::Jin],
+        wai_dizhi: [DiZhi::Wei, DiZhi::Si, DiZhi::Mao],
+        // wai_wuxing: [WuXing::Tu, WuXing::Huo, WuXing::Mu],
+        palace_element: WuXing::Mu,
         gua_name: [
             "巽为风䷸(六冲)",
             "风天小畜䷈",
@@ -222,11 +430,11 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
     SixtyFourGua {
         // name: "离",
         index: "121",
-        nei_dizhi: ["卯", "丑", "亥"],
-        nei_wuxing: ["木", "土", "水"],
-        wai_dizhi: ["酉", "未", "巳"],
-        wai_wuxing: ["金", "土", "火"],
-        palace_element: "火",
+        nei_dizhi: [DiZhi::Mao, DiZhi::Chou, DiZhi::Hai],
+        // nei_wuxing: [WuXing::Mu, WuXing::Tu, WuXing::Shui],
+        wai_dizhi: [DiZhi::You, DiZhi::Wei, DiZhi::Si],
+        // wai_wuxing: [WuXing::Jin, WuXing::Tu, WuXing::Huo],
+        palace_element: WuXing::Huo,
         gua_name: [
             "离为火䷝(六冲)",
             "火山旅䷷(六合)",
@@ -244,11 +452,11 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
     SixtyFourGua {
         // name: "兑",
         index: "112",
-        nei_dizhi: ["巳", "卯", "丑"],
-        nei_wuxing: ["火", "木", "土"],
-        wai_dizhi: ["亥", "酉", "未"],
-        wai_wuxing: ["水", "金", "土"],
-        palace_element: "金",
+        nei_dizhi: [DiZhi::Si, DiZhi::Mao, DiZhi::Chou],
+        // nei_wuxing: [WuXing::Huo, WuXing::Mu, WuXing::Tu],
+        wai_dizhi: [DiZhi::Hai, DiZhi::You, DiZhi::Wei],
+        // wai_wuxing: [WuXing::Shui, WuXing::Jin, WuXing::Tu],
+        palace_element: WuXing::Jin,
         gua_name: [
             "兑为泽䷹(六冲)",
             "泽水困䷮(六合)",
@@ -265,7 +473,7 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
     },
 ];
 
-//获取干支信息，例如乙巳年 辛巳月 壬辰日 申时
+// 获取干支信息，例如乙巳年 辛巳月 壬辰日 申时
 fn get_ganzhi_info() -> (String, String, String, String) {
     let now = Local::now();
     let current_solar = solar::from_ymdhms(
@@ -285,103 +493,87 @@ fn get_ganzhi_info() -> (String, String, String, String) {
     )
 }
 
-// 辅助函数：根据地支获取五行
-fn get_dizhi_wuxing(dizhi: &str) -> Option<&'static str> {
-    match dizhi {
-        "子" | "亥" => Some("水"),
-        "寅" | "卯" => Some("木"),
-        "巳" | "午" => Some("火"),
-        "申" | "酉" => Some("金"),
-        "辰" | "戌" | "丑" | "未" => Some("土"),
-        _ => None,
-    }
-}
-
 // 判断地支之间的冲合关系
-fn get_chong_he_relation(dizhi1: &str, dizhi2: &str) -> Option<&'static str> {
+fn get_chong_he_relation(dizhi1: DiZhi, dizhi2: DiZhi) -> Option<ChongHe> {
+    use {ChongHe::*, DiZhi::*};
     match (dizhi1, dizhi2) {
-        ("子", "午")
-        | ("午", "子")
-        | ("丑", "未")
-        | ("未", "丑")
-        | ("寅", "申")
-        | ("申", "寅")
-        | ("卯", "酉")
-        | ("酉", "卯")
-        | ("辰", "戌")
-        | ("戌", "辰")
-        | ("巳", "亥")
-        | ("亥", "巳") => Some("冲"),
-        ("子", "丑")
-        | ("丑", "子")
-        | ("寅", "亥")
-        | ("亥", "寅")
-        | ("卯", "戌")
-        | ("戌", "卯")
-        | ("辰", "酉")
-        | ("酉", "辰")
-        | ("巳", "申")
-        | ("申", "巳")
-        | ("午", "未")
-        | ("未", "午") => Some("合"),
+        (Zi, Wu)
+        | (Wu, Zi)
+        | (Chou, Wei)
+        | (Wei, Chou)
+        | (Yin, Shen)
+        | (Shen, Yin)
+        | (Mao, You)
+        | (You, Mao)
+        | (Chen, Xu)
+        | (Xu, Chen)
+        | (Si, Hai)
+        | (Hai, Si) => Some(Chong),
+        (Zi, Chou)
+        | (Chou, Zi)
+        | (Yin, Hai)
+        | (Hai, Yin)
+        | (Mao, Xu)
+        | (Xu, Mao)
+        | (Chen, You)
+        | (You, Chen)
+        | (Si, Shen)
+        | (Shen, Si)
+        | (Wu, Wei)
+        | (Wei, Wu) => Some(He),
         _ => None,
     }
 }
 
 // 判断地支之间的生克关系
-fn get_sheng_ke_relation(element1: &str, element2: &str) -> Option<&'static str> {
-    // 统一将输入转换为五行，如果输入本身就是五行，则直接使用
-    let wuxing1 = get_dizhi_wuxing(element1).unwrap_or(element1);
-    let wuxing2 = get_dizhi_wuxing(element2).unwrap_or(element2);
-
-    match wuxing1 {
-        "木" => match wuxing2 {
-            "火" => Some("生"),
-            "土" => Some("克"),
-            _ => None,
-        },
-        "火" => match wuxing2 {
-            "土" => Some("生"),
-            "金" => Some("克"),
-            _ => None,
-        },
-        "土" => match wuxing2 {
-            "金" => Some("生"),
-            "水" => Some("克"),
-            _ => None,
-        },
-        "金" => match wuxing2 {
-            "水" => Some("生"),
-            "木" => Some("克"),
-            _ => None,
-        },
-        "水" => match wuxing2 {
-            "木" => Some("生"),
-            "火" => Some("克"),
-            _ => None,
-        },
+fn get_sheng_ke_relation(wuxing1: WuXing, wuxing2: WuXing) -> Option<ShengKe> {
+    use {ShengKe::*, WuXing::*};
+    match (wuxing1, wuxing2) {
+        (Mu, Huo) | (Huo, Tu) | (Tu, Jin) | (Jin, Shui) | (Shui, Mu) => Some(Sheng),
+        (Mu, Tu) | (Huo, Jin) | (Tu, Shui) | (Jin, Mu) | (Shui, Huo) => Some(Ke),
         _ => None,
     }
 }
 
 // 确定世应并填充 (仅用于正卦)
 fn determine_shi_ying_indices(gua: &mut Gua) {
-    let nei: Vec<char> = gua.index_str.chars().take(3).collect();
-    let wai: Vec<char> = gua.index_str.chars().skip(3).take(3).collect();
+    let nei = &gua.yao_xiang[0..3];
+    let wai = &gua.yao_xiang[3..6];
 
-    let (shi_idx, ying_idx) = if nei[2] == wai[2] && nei[0] != wai[0] && nei[1] != wai[1] {
+    let (shi_idx, ying_idx) = if nei[2].index_char() == wai[2].index_char()
+        && nei[0].index_char() != wai[0].index_char()
+        && nei[1].index_char() != wai[1].index_char()
+    {
         (1, 4)
-    } else if nei[2] != wai[2] && nei[0] == wai[0] && nei[1] == wai[1] {
+    } else if nei[2].index_char() != wai[2].index_char()
+        && nei[0].index_char() == wai[0].index_char()
+        && nei[1].index_char() == wai[1].index_char()
+    {
         (4, 1)
-    } else if nei[0] == wai[0] && nei[1] != wai[1] && nei[2] != wai[2] {
+    } else if nei[0].index_char() == wai[0].index_char()
+        && nei[1].index_char() != wai[1].index_char()
+        && nei[2].index_char() != wai[2].index_char()
+    {
         (3, 0)
-    } else if nei[0] != wai[0] && nei[1] == wai[1] && nei[2] == wai[2] {
+    } else if nei[0].index_char() != wai[0].index_char()
+        && nei[1].index_char() == wai[1].index_char()
+        && nei[2].index_char() == wai[2].index_char()
+    {
         (0, 3)
-    } else if nei[1] == wai[1] && nei[0] != wai[0] && nei[2] != wai[2] {
+    } else if nei[1].index_char() == wai[1].index_char()
+        && nei[0].index_char() != wai[0].index_char()
+        && nei[2].index_char() != wai[2].index_char()
+    {
         (3, 0)
-    } else if nei[1] != wai[1] && nei[0] == wai[0] && nei[2] == wai[2] {
+    } else if nei[1].index_char() != wai[1].index_char()
+        && nei[0].index_char() == wai[0].index_char()
+        && nei[2].index_char() == wai[2].index_char()
+    {
         (2, 5)
-    } else if nei[0] == wai[0] && nei[1] == wai[1] && nei[2] == wai[2] {
+    } else if nei[0].index_char() == wai[0].index_char()
+        && nei[1].index_char() == wai[1].index_char()
+        && nei[2].index_char() == wai[2].index_char()
+    {
         (5, 2)
     } else {
         (2, 5)
@@ -393,15 +585,8 @@ fn determine_shi_ying_indices(gua: &mut Gua) {
 
 // 填充五行
 fn append_wuxing(gua: &mut Gua) {
-    let (nei_index, wai_index) = gua.index_str.split_at(3);
-    if let (Some(hun_tian_nei), Some(hun_tian_wai)) = (
-        SIXTYFOURGUA_DATA.iter().find(|h| h.index == nei_index),
-        SIXTYFOURGUA_DATA.iter().find(|h| h.index == wai_index),
-    ) {
-        for i in 0..3 {
-            gua.wuxing[i] = hun_tian_nei.nei_wuxing[i];
-            gua.wuxing[i + 3] = hun_tian_wai.wai_wuxing[i];
-        }
+    for i in 0..6 {
+        gua.wuxing[i] = gua.dizhi[i].wuxing();
     }
 }
 
@@ -412,51 +597,47 @@ fn append_dizhi(gua: &mut Gua) {
         SIXTYFOURGUA_DATA.iter().find(|h| h.index == nei_index),
         SIXTYFOURGUA_DATA.iter().find(|h| h.index == wai_index),
     ) {
-        for i in 0..3 {
-            gua.dizhi[i] = hun_tian_nei.nei_dizhi[i];
-            gua.dizhi[i + 3] = hun_tian_wai.wai_dizhi[i];
-        }
+        gua.dizhi[0..3].copy_from_slice(&hun_tian_nei.nei_dizhi);
+        gua.dizhi[3..6].copy_from_slice(&hun_tian_wai.wai_dizhi);
     }
 }
 
 // 填充六亲 (依赖五行和宫位五行)
-fn append_liuqin(gua: &mut Gua, palace_element: &str) {
+fn append_liuqin(gua: &mut Gua, palace_element: WuXing) {
+    use {LiuQin::*};
     for i in 0..6 {
-        let wuxing_char = gua.wuxing[i].chars().next().unwrap_or(' ');
-        let liuqin = match (palace_element, wuxing_char) {
-            ("金", '金') => "兄弟",
-            ("金", '水') => "子孙",
-            ("金", '木') => "妻财",
-            ("金", '火') => "官鬼",
-            ("金", '土') => "父母",
-            ("木", '木') => "兄弟",
-            ("木", '火') => "子孙",
-            ("木", '土') => "妻财",
-            ("木", '金') => "官鬼",
-            ("木", '水') => "父母",
-            ("水", '水') => "兄弟",
-            ("水", '木') => "子孙",
-            ("水", '火') => "妻财",
-            ("水", '土') => "官鬼",
-            ("水", '金') => "父母",
-            ("火", '火') => "兄弟",
-            ("火", '土') => "子孙",
-            ("火", '金') => "妻财",
-            ("火", '水') => "官鬼",
-            ("火", '木') => "父母",
-            ("土", '土') => "兄弟",
-            ("土", '金') => "子孙",
-            ("土", '水') => "妻财",
-            ("土", '木') => "官鬼",
-            ("土", '火') => "父母",
-            _ => "未知",
+        gua.liuqin[i] = match (palace_element, gua.wuxing[i]) {
+            (WuXing::Jin, WuXing::Jin)
+            | (WuXing::Mu, WuXing::Mu)
+            | (WuXing::Shui, WuXing::Shui)
+            | (WuXing::Huo, WuXing::Huo)
+            | (WuXing::Tu, WuXing::Tu) => XiongDi,
+            (WuXing::Jin, WuXing::Shui)
+            | (WuXing::Mu, WuXing::Huo)
+            | (WuXing::Shui, WuXing::Mu)
+            | (WuXing::Huo, WuXing::Tu)
+            | (WuXing::Tu, WuXing::Jin) => ZiSun,
+            (WuXing::Jin, WuXing::Mu)
+            | (WuXing::Mu, WuXing::Tu)
+            | (WuXing::Shui, WuXing::Huo)
+            | (WuXing::Huo, WuXing::Jin)
+            | (WuXing::Tu, WuXing::Shui) => QiCai,
+            (WuXing::Jin, WuXing::Huo)
+            | (WuXing::Mu, WuXing::Jin)
+            | (WuXing::Shui, WuXing::Tu)
+            | (WuXing::Huo, WuXing::Shui)
+            | (WuXing::Tu, WuXing::Mu) => GuanGui,
+            (WuXing::Jin, WuXing::Tu)
+            | (WuXing::Mu, WuXing::Shui)
+            | (WuXing::Shui, WuXing::Jin)
+            | (WuXing::Huo, WuXing::Mu)
+            | (WuXing::Tu, WuXing::Huo) => FuMu,
         };
-        gua.liuqin[i] = liuqin;
     }
 }
 
-//找到卦宫对应的五行属性用于判断六亲
-fn find_palace_element(gua_index: &str) -> Option<&'static str> {
+// 找到卦宫对应的五行属性用于判断六亲
+fn find_palace_element(gua_index: &str) -> Option<WuXing> {
     SIXTYFOURGUA_DATA.iter().find_map(|gua| {
         gua.gua_index
             .iter()
@@ -465,7 +646,7 @@ fn find_palace_element(gua_index: &str) -> Option<&'static str> {
     })
 }
 
-//查找对应的卦宫名称
+// 查找对应的卦宫名称
 fn find_palace_name(gua_index: &str) -> Option<&'static str> {
     SIXTYFOURGUA_DATA.iter().find_map(|gua| {
         gua.gua_index
@@ -475,8 +656,8 @@ fn find_palace_name(gua_index: &str) -> Option<&'static str> {
     })
 }
 
-//处理卦
-fn process_gua(gua: &mut Gua, palace_element: &'static str) {
+// 处理卦
+fn process_gua(gua: &mut Gua, palace_element: WuXing) {
     // 正卦和变卦的六亲都是根据正卦的宫位五行来定的，所以 palace_element 需要传入
     append_dizhi(gua);
     append_wuxing(gua);
@@ -490,57 +671,21 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     let (year_ganzhi, month_ganzhi, day_ganzhi, hour_ganzhi) = get_ganzhi_info();
 
     // 1. === 初始化正卦 (Zheng Gua) ===
-    let mut zheng_yao_xiang = [
-        String::new(),
-        String::new(),
-        String::new(),
-        String::new(),
-        String::new(),
-        String::new(),
-    ];
-    let mut zheng_index_vec = Vec::with_capacity(6);
-    for (i, c) in numbers.chars().enumerate() {
-        let (yao, index_char) = match c {
-            '0' => ("⚋ x".to_string(), "2"),
-            '1' => ("⚊".to_string(), "1"),
-            '2' => ("⚋".to_string(), "2"),
-            '3' => ("⚊ o".to_string(), "1"),
-            _ => ("".to_string(), ""),
-        };
-        if i < 6 {
-            zheng_yao_xiang[i] = yao;
-        }
-        zheng_index_vec.push(index_char);
+    let mut zheng_yao_xiang = [Yao::YinStatic; 6];
+    for (i, c) in numbers.chars().enumerate().take(6) {
+        zheng_yao_xiang[i] = Yao::from(c);
     }
-    let mut zheng_gua = Gua::new(zheng_yao_xiang, zheng_index_vec.join(""));
+    let mut zheng_gua = Gua::new(zheng_yao_xiang);
 
     // 2. === 初始化变卦 (Bian Gua) ===
-    let mut bian_yao_xiang = [
-        String::new(),
-        String::new(),
-        String::new(),
-        String::new(),
-        String::new(),
-        String::new(),
-    ];
-    let mut bian_index_vec = Vec::with_capacity(6);
-    for (i, c) in numbers.chars().enumerate() {
-        let (yao, index_char) = match c {
-            '0' => ("⚊".to_string(), "1"),
-            '1' => ("⚊".to_string(), "1"),
-            '2' => ("⚋".to_string(), "2"),
-            '3' => ("⚋".to_string(), "2"),
-            _ => ("".to_string(), ""),
-        };
-        if i < 6 {
-            bian_yao_xiang[i] = yao;
-        }
-        bian_index_vec.push(index_char);
+    let mut bian_yao_xiang = [Yao::YinStatic; 6];
+    for i in 0..6 {
+        bian_yao_xiang[i] = zheng_gua.yao_xiang[i].to_bian_yao();
     }
-    let mut bian_gua = Gua::new(bian_yao_xiang, bian_index_vec.join(""));
+    let mut bian_gua = Gua::new(bian_yao_xiang);
 
     // 3. === 数据处理和填充 ===
-    let palace_element = find_palace_element(&zheng_gua.index_str).unwrap_or("未知");
+    let palace_element = find_palace_element(&zheng_gua.index_str).unwrap_or(WuXing::Jin); // 默认为金
 
     // 处理正卦
     process_gua(&mut zheng_gua, palace_element);
@@ -550,16 +695,18 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     process_gua(&mut bian_gua, palace_element);
 
     // 获取月和日的地支
-    let month_dizhi = month_ganzhi
+    let month_dizhi_str = month_ganzhi
         .chars()
         .nth(1)
         .map(|c| &month_ganzhi[c.len_utf8()..])
         .unwrap_or("");
-    let day_dizhi = day_ganzhi
+    let day_dizhi_str = day_ganzhi
         .chars()
         .nth(1)
         .map(|c| &day_ganzhi[c.len_utf8()..])
         .unwrap_or("");
+    let month_dizhi = DiZhi::try_from(month_dizhi_str).ok();
+    let day_dizhi = DiZhi::try_from(day_dizhi_str).ok();
 
     // 4. === 格式化最终输出 ===
     let mut combined_lines = Vec::with_capacity(7);
@@ -568,7 +715,10 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
         // 格式化正卦的每一爻
         let mut zheng_line = format!(
             "{}{}{}{}",
-            zheng_gua.liuqin[i], zheng_gua.dizhi[i], zheng_gua.wuxing[i], zheng_gua.yao_xiang[i]
+            zheng_gua.liuqin[i],
+            zheng_gua.dizhi[i],
+            zheng_gua.wuxing[i],
+            zheng_gua.yao_xiang[i].xiang()
         );
         if zheng_gua.shi_idx == Some(i) {
             zheng_line.push_str("<div style='color:black;'>世</div>"); 
@@ -576,27 +726,34 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
         if zheng_gua.ying_idx == Some(i) {
             zheng_line.push_str("<div style='color:black;'>应</div>"); 
         }
-        // 判断并追加冲合关系 (月对爻)
-        if let Some(relation) = get_chong_he_relation(zheng_gua.dizhi[i], month_dizhi) {
-            zheng_line.push_str(&format!(" 月{}", relation));
+        if let Some(md) = month_dizhi {
+            // 判断并追加冲合关系 (月对爻)
+            if let Some(relation) = get_chong_he_relation(zheng_gua.dizhi[i], md) {
+                zheng_line.push_str(&format!(" 月{}", relation));
+            }
+            // 判断并追加生克关系 (月对爻)
+            if let Some(relation) = get_sheng_ke_relation(md.wuxing(), zheng_gua.wuxing[i]) {
+                zheng_line.push_str(&format!(" 月{}", relation));
+            }
         }
-        // 判断并追加冲合关系 (日对爻)
-        if let Some(relation) = get_chong_he_relation(zheng_gua.dizhi[i], day_dizhi) {
-            zheng_line.push_str(&format!(" 日{}", relation));
-        }
-        // 判断并追加生克关系 (月对爻)
-        if let Some(relation) = get_sheng_ke_relation(month_dizhi, zheng_gua.dizhi[i]) {
-            zheng_line.push_str(&format!(" 月{}", relation));
-        }
-        // 判断并追加生克关系 (日对爻)
-        if let Some(relation) = get_sheng_ke_relation(day_dizhi, zheng_gua.dizhi[i]) {
-            zheng_line.push_str(&format!(" 日{}", relation));
+        if let Some(dd) = day_dizhi {
+            // 判断并追加冲合关系 (日对爻)
+            if let Some(relation) = get_chong_he_relation(zheng_gua.dizhi[i], dd) {
+                zheng_line.push_str(&format!(" 日{}", relation));
+            }
+            // 判断并追加生克关系 (日对爻)
+            if let Some(relation) = get_sheng_ke_relation(dd.wuxing(), zheng_gua.wuxing[i]) {
+                zheng_line.push_str(&format!(" 日{}", relation));
+            }
         }
 
         // 格式化变卦的每一爻
         let bian_line = format!(
             "{}{}{}{}",
-            bian_gua.liuqin[i], bian_gua.dizhi[i], bian_gua.wuxing[i], bian_gua.yao_xiang[i]
+            bian_gua.liuqin[i],
+            bian_gua.dizhi[i],
+            bian_gua.wuxing[i],
+            bian_gua.yao_xiang[i].xiang()
         );
 
         combined_lines.push(format!("{}\t{}", zheng_line, bian_line));
