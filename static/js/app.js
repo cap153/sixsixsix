@@ -67,28 +67,41 @@ async function generateGuaXiang() {
         });
         guaDiagram.appendChild(ganzhiInfoDiv);
 
-        data.gua_xian.reverse().forEach((gua, index) => {
-            const [zhengGua, bianGua] = gua.split('\t');
-
+        // 反转数组以正确顺序显示 (初爻在下，上爻在上)
+        data.gua_lines.reverse().forEach((lineData, index) => {
             const guaDiv = document.createElement('div');
             guaDiv.style.display = 'flex';
-            
-            const zhengDiv = document.createElement('div');
-            const bianDiv = document.createElement('div');
 
-            if (index === 0) { // 卦名行，使用 textContent 即可
-                zhengDiv.textContent = zhengGua;
-                bianDiv.textContent = bianGua;
-                zhengDiv.style.cssText = 'text-align: center; color: black; flex: 1';
-                bianDiv.style.cssText = 'text-align: center; color: black; flex: 1';
-            } else { // 爻辞行，需要处理 HTML
-                zhengDiv.style.flex = '1';
-                bianDiv.style.flex = '1';
-                // 使用 innerHTML 替代 textContent 来渲染 HTML 标签
-                zhengDiv.innerHTML = zhengGua;
-                bianDiv.innerHTML = bianGua;
-                addWuxingColorClass(zhengDiv, zhengGua.charAt(2));
-                addWuxingColorClass(bianDiv, bianGua.charAt(2));
+            const zhengDiv = document.createElement('div');
+            zhengDiv.style.flex = '1';
+
+            const bianDiv = document.createElement('div');
+            bianDiv.style.flex = '1';
+            
+            // 添加基础文本 (六亲、地支、五行、爻象)
+            zhengDiv.appendChild(document.createTextNode(lineData.base_text));
+
+            // 如果是世或应，创建一个独立的、带样式的 <span>
+            if (lineData.role === 'Shi' || lineData.role === 'Ying') {
+                const roleSpan = document.createElement('span');
+                roleSpan.className = 'role-tag'; // 使用一个通用类
+                roleSpan.textContent = lineData.role === 'Shi' ? ' 世' : ' 应';
+                zhengDiv.appendChild(roleSpan);
+            }
+
+            // 添加关系文本 (月日冲合生克)
+            zhengDiv.appendChild(document.createTextNode(lineData.relations_text));
+            
+            // 变卦内容依然简单
+            bianDiv.textContent = lineData.bian_text;
+
+            // 应用五行颜色到整个 zhengDiv 和 bianDiv
+            if (index > 0) { // 跳过卦名行
+                addWuxingColorClass(zhengDiv, lineData.base_text.charAt(2));
+                addWuxingColorClass(bianDiv, lineData.bian_text.charAt(2));
+            } else {
+                 zhengDiv.style.textAlign = 'center';
+                 bianDiv.style.textAlign = 'center';
             }
 
             guaDiv.appendChild(zhengDiv);

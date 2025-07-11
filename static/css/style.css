@@ -183,6 +183,23 @@ button:hover {
     color: #0000FF; /* 蓝色 */
 }
 
+/* 为了确保五行颜色不会意外影响到 role-tag，可以提高其优先级 */
+.gua-diagram div .role-tag {
+    color: #333; /* 再次声明，确保优先级 */
+}
+
+/* 新增一个专门用于“世”“应”标签的样式 */
+.role-tag {
+  color: #333; /* 你想要的颜色，例如深灰色/黑色 */
+  font-weight: bold; /* 加粗以突出显示 */
+  margin: 0 0.2em; /* 左右稍微留出一点空间 */
+}
+
+/* 如果你还想让“世”和“应”有不同颜色，可以这样做 */
+/* (这需要你在 JS 中添加 'shi' 或 'ying' 类) */
+/* .role-tag.shi { color: red; } */
+/* .role-tag.ying { color: blue; } */
+
 .analysis-content {
   padding: 1.5rem;
   background: #fff;

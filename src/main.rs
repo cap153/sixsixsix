@@ -127,7 +127,6 @@ enum Yao {
     YinStatic,    // 2 -> ⚋   (少阴，不变)
     YangChanging, // 3 -> ⚊ o  (老阳，变阴)
 }
-
 impl Yao {
     /// 获取爻的图形表示（如 "⚊" 或 "⚋ x"）。
     fn xiang(&self) -> &'static str {
@@ -159,7 +158,7 @@ impl Yao {
     }
 }
 
-// 实现 From<char> trait，用于从前端传入的字符（'0'~'3'）直接创建Yao枚举。
+// 从前端传入的字符（'0'~'3'）直接创建Yao枚举。
 impl From<char> for Yao {
     fn from(c: char) -> Self {
         match c {
@@ -171,6 +170,14 @@ impl From<char> for Yao {
             _ => panic!("Invalid character for Yao conversion"),
         }
     }
+}
+
+// 表示一个爻在卦中的角色（世、应或普通）。
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize)]
+enum YaoRole {
+    Shi,    // 世爻
+    Ying,   // 应爻
+    Normal, // 普通爻
 }
 
 /// 表示地支间的冲或合关系。
@@ -236,18 +243,28 @@ async fn embedded_file(path: web::Path<String>) -> impl Responder {
     }
 }
 
-#[derive(Serialize, Deserialize)]
-struct GuaRequest {
-    numbers: String,
+// 新增：用于表示单行卦爻信息的结构体
+#[derive(Serialize)]
+struct GuaLineResponse {
+    base_text: String, 
+    role: YaoRole,
+    relations_text: String, 
+    // 变卦部分可以简化，因为它没有角色和关系
+    bian_text: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize)]
 struct GuaResponse {
-    gua_xian: Vec<String>,
+    gua_lines: Vec<GuaLineResponse>,
     year_ganzhi: String,
     month_ganzhi: String,
     day_ganzhi: String,
     hour_ganzhi: String,
+}
+
+#[derive(Deserialize)]
+struct GuaRequest {
+    numbers: String,
 }
 
 // 存储一个完整卦的所有信息
@@ -255,14 +272,12 @@ struct GuaResponse {
 struct Gua {
     yao_xiang: [Yao; 6],       // 爻象, e.g., ["⚊", "⚋ o", ...]
     index_str: String,         // 卦的数字索引, e.g., "122111"
-    shi_idx: Option<usize>,    // 世爻索引
-    ying_idx: Option<usize>,   // 应爻索引
+    yao_roles: [YaoRole; 6],   // 每个爻都有一个角色，世、应或普通
     dizhi: [DiZhi; 6],         // 每爻的地支
     wuxing: [WuXing; 6],       // 每爻的五行
     liuqin: [LiuQin; 6],       // 每爻的六亲
     palace_name: &'static str, // 卦名，e.g., "天风姤"
 }
-
 impl Gua {
     // 创建一个新的、未填充的Gua实例
     fn new(yao_xiang: [Yao; 6]) -> Self {
@@ -270,8 +285,8 @@ impl Gua {
         Gua {
             yao_xiang,
             index_str,
-            shi_idx: None,
-            ying_idx: None,
+            // 初始化时，所有爻都是普通角色
+            yao_roles: [YaoRole::Normal; 6], 
             // 使用 Copy 特性可以直接创建数组，无需手动填充
             dizhi: [DiZhi::Zi; 6],
             wuxing: [WuXing::Jin; 6],
@@ -536,7 +551,7 @@ fn get_sheng_ke_relation(wuxing1: WuXing, wuxing2: WuXing) -> Option<ShengKe> {
 }
 
 // 确定世应并填充 (仅用于正卦)
-fn determine_shi_ying_indices(gua: &mut Gua) {
+fn determine_yao_roles(gua: &mut Gua) {
     let nei = &gua.yao_xiang[0..3];
     let wai = &gua.yao_xiang[3..6];
 
@@ -579,8 +594,8 @@ fn determine_shi_ying_indices(gua: &mut Gua) {
         (2, 5)
     };
 
-    gua.shi_idx = Some(shi_idx);
-    gua.ying_idx = Some(ying_idx);
+    gua.yao_roles[shi_idx] = YaoRole::Shi;
+    gua.yao_roles[ying_idx] = YaoRole::Ying;
 }
 
 // 填充五行
@@ -689,7 +704,7 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
 
     // 处理正卦
     process_gua(&mut zheng_gua, palace_element);
-    determine_shi_ying_indices(&mut zheng_gua); // 世应只在正卦上
+    determine_yao_roles(&mut zheng_gua); // 世应只在正卦上
 
     // 处理变卦 (使用正卦的宫位五行)
     process_gua(&mut bian_gua, palace_element);
@@ -709,46 +724,44 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     let day_dizhi = DiZhi::try_from(day_dizhi_str).ok();
 
     // 4. === 格式化最终输出 ===
-    let mut combined_lines = Vec::with_capacity(7);
+    let mut gua_lines = Vec::with_capacity(7);
 
     for i in 0..6 {
-        // 格式化正卦的每一爻
-        let mut zheng_line = format!(
+        // 构建正卦的基础文本（不含世应）
+        let base_text = format!(
             "{}{}{}{}",
             zheng_gua.liuqin[i],
             zheng_gua.dizhi[i],
             zheng_gua.wuxing[i],
             zheng_gua.yao_xiang[i].xiang()
         );
-        if zheng_gua.shi_idx == Some(i) {
-            zheng_line.push_str("<div style='color:black;'>世</div>"); 
-        }
-        if zheng_gua.ying_idx == Some(i) {
-            zheng_line.push_str("<div style='color:black;'>应</div>"); 
-        }
+        // 构建关系文本
+        let mut relations_text = String::new();
+        // 判断月的影响
         if let Some(md) = month_dizhi {
             // 判断并追加冲合关系 (月对爻)
             if let Some(relation) = get_chong_he_relation(zheng_gua.dizhi[i], md) {
-                zheng_line.push_str(&format!(" 月{}", relation));
+                relations_text.push_str(&format!(" 月{}", relation));
             }
             // 判断并追加生克关系 (月对爻)
             if let Some(relation) = get_sheng_ke_relation(md.wuxing(), zheng_gua.wuxing[i]) {
-                zheng_line.push_str(&format!(" 月{}", relation));
+                relations_text.push_str(&format!(" 月{}", relation));
             }
         }
+        // 判断日的影响
         if let Some(dd) = day_dizhi {
             // 判断并追加冲合关系 (日对爻)
             if let Some(relation) = get_chong_he_relation(zheng_gua.dizhi[i], dd) {
-                zheng_line.push_str(&format!(" 日{}", relation));
+                relations_text.push_str(&format!(" 日{}", relation));
             }
             // 判断并追加生克关系 (日对爻)
             if let Some(relation) = get_sheng_ke_relation(dd.wuxing(), zheng_gua.wuxing[i]) {
-                zheng_line.push_str(&format!(" 日{}", relation));
+                relations_text.push_str(&format!(" 日{}", relation));
             }
         }
 
-        // 格式化变卦的每一爻
-        let bian_line = format!(
+        // 构建变卦的基础文本
+        let bian_text = format!(
             "{}{}{}{}",
             bian_gua.liuqin[i],
             bian_gua.dizhi[i],
@@ -756,16 +769,24 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
             bian_gua.yao_xiang[i].xiang()
         );
 
-        combined_lines.push(format!("{}\t{}", zheng_line, bian_line));
+        gua_lines.push(GuaLineResponse {
+            base_text,
+            role: zheng_gua.yao_roles[i],
+            relations_text,
+            bian_text,
+        });
     }
-    // 添加最后的卦名行
-    combined_lines.push(format!(
-        "{}\t{}",
-        zheng_gua.palace_name, bian_gua.palace_name
-    ));
+    // 单独处理卦名
+    let name_line = GuaLineResponse {
+        base_text: zheng_gua.palace_name.to_string(),
+        role: YaoRole::Normal,
+        relations_text: String::new(),
+        bian_text: bian_gua.palace_name.to_string(),
+    };
+    gua_lines.push(name_line);
 
     HttpResponse::Ok().json(GuaResponse {
-        gua_xian: combined_lines,
+        gua_lines,
         year_ganzhi,
         month_ganzhi,
         day_ganzhi,
