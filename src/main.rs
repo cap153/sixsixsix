@@ -248,9 +248,10 @@ async fn embedded_file(path: web::Path<String>) -> impl Responder {
 struct GuaLineResponse {
     base_text: String, 
     role: YaoRole,
-    relations_text: String, 
+    zheng_relations_text: String, 
     // 变卦部分可以简化，因为它没有角色和关系
     bian_text: String,
+    bian_relations_text: String,
 }
 
 #[derive(Serialize)]
@@ -735,28 +736,42 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
             zheng_gua.wuxing[i],
             zheng_gua.yao_xiang[i].xiang()
         );
-        // 构建关系文本
-        let mut relations_text = String::new();
+        // 构建正卦关系文本
+        let mut zheng_relations_text = String::new();
         // 判断月的影响
         if let Some(md) = month_dizhi {
             // 判断并追加冲合关系 (月对爻)
             if let Some(relation) = get_chong_he_relation(zheng_gua.dizhi[i], md) {
-                relations_text.push_str(&format!(" 月{}", relation));
+                zheng_relations_text.push_str(&format!(" 月{}", relation));
             }
             // 判断并追加生克关系 (月对爻)
             if let Some(relation) = get_sheng_ke_relation(md.wuxing(), zheng_gua.wuxing[i]) {
-                relations_text.push_str(&format!(" 月{}", relation));
+                zheng_relations_text.push_str(&format!(" 月{}", relation));
             }
         }
         // 判断日的影响
         if let Some(dd) = day_dizhi {
             // 判断并追加冲合关系 (日对爻)
             if let Some(relation) = get_chong_he_relation(zheng_gua.dizhi[i], dd) {
-                relations_text.push_str(&format!(" 日{}", relation));
+                zheng_relations_text.push_str(&format!(" 日{}", relation));
             }
             // 判断并追加生克关系 (日对爻)
             if let Some(relation) = get_sheng_ke_relation(dd.wuxing(), zheng_gua.wuxing[i]) {
-                relations_text.push_str(&format!(" 日{}", relation));
+                zheng_relations_text.push_str(&format!(" 日{}", relation));
+            }
+        }
+
+        // 构建变卦关系文本
+        let mut bian_relations_text = String::new();
+        // 只有当正卦的爻是动爻时，才计算回头关系
+        if matches!(zheng_gua.yao_xiang[i], Yao::YinChanging | Yao::YangChanging) {
+            // 变爻回头生克 (变爻的五行 -> 正爻的五行)
+            if let Some(relation) = get_sheng_ke_relation(bian_gua.wuxing[i], zheng_gua.wuxing[i]) {
+                bian_relations_text.push_str(&format!(" 回头{}", relation));
+            }
+            // 变爻回头冲合 (变爻的地支 vs 正爻的地支)
+            if let Some(relation) = get_chong_he_relation(bian_gua.dizhi[i], zheng_gua.dizhi[i]) {
+                bian_relations_text.push_str(&format!("{}", relation));
             }
         }
 
@@ -772,16 +787,18 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
         gua_lines.push(GuaLineResponse {
             base_text,
             role: zheng_gua.yao_roles[i],
-            relations_text,
+            zheng_relations_text,
             bian_text,
+            bian_relations_text,
         });
     }
     // 单独处理卦名
     let name_line = GuaLineResponse {
         base_text: zheng_gua.palace_name.to_string(),
         role: YaoRole::Normal,
-        relations_text: String::new(),
+        zheng_relations_text: String::new(),
         bian_text: bian_gua.palace_name.to_string(),
+        bian_relations_text: String::new(),
     };
     gua_lines.push(name_line);
 

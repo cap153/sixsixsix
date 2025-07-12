@@ -102,17 +102,26 @@ async function generateGuaXiang() {
                         zhengDiv.appendChild(roleSpan);
                     }
 
-                    // 3. 添加关系文本
-                    const relationSpan = document.createElement('span');
-                    relationSpan.className = 'relation-text';
-                    relationSpan.textContent = lineData.relations_text;
-                    zhengDiv.appendChild(relationSpan);
+                    // 如果存在日月等影响，添加关系文本
+                    const zhengRelationSpan = document.createElement('span');
+                    zhengRelationSpan.className = 'relation-text';
+                    zhengRelationSpan.textContent = lineData.zheng_relations_text;
+                    zhengDiv.appendChild(zhengRelationSpan);
                     
                     // 变卦内容
                     const bianBaseSpan = document.createElement('span');
                     bianBaseSpan.textContent = lineData.bian_text;
                     addWuxingColorClass(bianBaseSpan, lineData.bian_text.charAt(2));
                     bianDiv.appendChild(bianBaseSpan);
+
+                    // 如果存在回头关系，添加关系文本
+                    if (lineData.bian_relations_text) {
+                        const bianRelationSpan = document.createElement('span');
+                        // 复用和正卦一样的样式类
+                        bianRelationSpan.className = 'relation-text'; 
+                        bianRelationSpan.textContent = lineData.bian_relations_text;
+                        bianDiv.appendChild(bianRelationSpan);
+                    }
                 }
 
                 guaDisplayGrid.appendChild(zhengDiv);
