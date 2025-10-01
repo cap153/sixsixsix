@@ -265,7 +265,7 @@ async fn embedded_file(path: web::Path<String>) -> impl Responder {
     }
 }
 
-// 新增：用于表示单行卦爻信息的结构体
+// 用于表示单行卦爻信息的结构体
 #[derive(Serialize)]
 struct GuaLineResponse {
     base_text: String,
@@ -274,6 +274,7 @@ struct GuaLineResponse {
     // 变卦部分可以简化，因为它没有角色和关系
     bian_text: String,
     bian_relations_text: String,
+    is_changing: bool,
 }
 
 #[derive(Serialize)]
@@ -786,7 +787,8 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
         // 构建变卦关系文本
         let mut bian_relations_text = String::new();
         // 只有当正卦的爻是动爻时，才计算回头关系
-        if matches!(zheng_gua.yao_xiang[i], Yao::YinChanging | Yao::YangChanging) {
+        let is_changing = matches!(zheng_gua.yao_xiang[i], Yao::YinChanging | Yao::YangChanging);
+        if is_changing {
             // 判断月的影响
             if let Some(md) = month_dizhi {
                 // 判断并追加冲合关系 (月对爻)
@@ -834,15 +836,17 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
             zheng_relations_text,
             bian_text,
             bian_relations_text,
+            is_changing,
         });
     }
-    // 单独处理卦名
+    // 单独处理卦名 离为火䷝(六冲)震为雷䷲(六) 等
     let name_line = GuaLineResponse {
         base_text: zheng_gua.palace_name.to_string(),
         role: YaoRole::Normal,
         zheng_relations_text: String::new(),
         bian_text: bian_gua.palace_name.to_string(),
         bian_relations_text: String::new(),
+        is_changing: false,
     };
     gua_lines.push(name_line);
 

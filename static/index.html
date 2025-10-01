@@ -1,64 +1,56 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>周易六爻在线排盘系统</title>
-    <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
-    <div class="container">
-        <header class="main-header">
-            <h1>六爻在线排盘</h1>
-        </header>
-        
-        <div class="input-section">
-            <div class="input-wrapper">
-                <input type="text"
-                       id="yaoInput"
-                       placeholder="输入六爻数字，如 231003"
-                       maxlength="6"
-                       pattern="[0-3]{6}"
-                       title="请输入6位0-3的数字"
-                       oninput="this.value=this.value.replace(/[^0-3]/g,'')">
-            </div>
-            <button onclick="generateGuaXiang()">推演卦象</button>
-        </div>
-
-        <div id="result" class="result-container">
-            <!-- JS 将在此处动态生成内容 -->
-        </div>
-
-        <!-- 新增：可展开的知识参考区域 -->
-        <div class="reference-section">
-            <details>
-                <summary>易学知识参考</summary>
-                <div class="reference-content">
-                    
-                    <div class="ref-item">
-                        <h3>五行生克图</h3>
-                        <div class="wuxing-diagram">
-                           <img src="wuxing.jpg" alt="五行生克关系图">
-                        </div>
-                    </div>
-                    
-                    <div class="ref-item">
-                        <h3>地支掌诀图 (冲合关系)</h3>
-                        <p class="dizhi-hint">中心对称(对角线)为六冲，左右对称(水平轴)为六合</p>
-                        <div class="dizhi-grid">
-                            <!-- JS 会在这里生成地支表格 -->
-                        </div>
-                    </div>
-
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>周易六爻在线排盘系统</title>
+        <link rel="stylesheet" href="css/style.css">
+    </head>
+    <body>
+        <div class="container">
+            <header class="main-header">
+                <h1>六爻在线排盘</h1>
+            </header>
+            <div class="input-section">
+                <div class="input-wrapper">
+                    <input type="text"
+                           id="yaoInput"
+                           placeholder="输入六爻数字，如 231003"
+                           maxlength="6"
+                           pattern="[0-3]{6}"
+                           title="请输入6位0-3的数字"
+                           oninput="this.value=this.value.replace(/[^0-3]/g,'')">
                 </div>
-            </details>
+                <button onclick="generateGuaXiang()">推演卦象</button>
+            </div>
+            <div id="result" class="result-container">
+                <!-- JS 将在此处动态生成内容 -->
+            </div>
+            <!-- 新增：可展开的知识参考区域 -->
+            <div class="reference-section">
+                <details>
+                    <summary>易学知识参考</summary>
+                    <div class="reference-content">
+                        <div class="ref-item">
+                            <h3>五行生克图</h3>
+                            <div class="wuxing-diagram">
+                                <img src="wuxing.jpg" alt="五行生克关系图">
+                            </div>
+                        </div>
+                        <div class="ref-item">
+                            <h3>地支掌诀图 (冲合关系)</h3>
+                            <p class="dizhi-hint">中心对称(对角线)为六冲，左右对称(水平轴)为六合</p>
+                            <div class="dizhi-grid">
+                                <!-- JS 会在这里生成地支表格 -->
+                            </div>
+                        </div>
+                    </div>
+                </details>
+            </div>
         </div>
-    </div>
-    
-    <footer>
-        <p>仅供学术研究与文化交流，请勿用作封建迷信活动。</p>
-    </footer>
-
-    <script src="js/app.js"></script> 
-</body>
+        <footer>
+            <p>仅供学术研究与文化交流，请勿用作封建迷信活动。</p>
+        </footer>
+        <script src="js/app.js"></script>
+    </body>
 </html>
