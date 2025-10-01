@@ -39,8 +39,18 @@ impl Display for WuXing {
 /// 表示十二地支（子、丑、寅等）。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum DiZhi {
-    Zi, Chou, Yin, Mao, Chen, Si,
-    Wu, Wei, Shen, You, Xu, Hai,
+    Zi,
+    Chou,
+    Yin,
+    Mao,
+    Chen,
+    Si,
+    Wu,
+    Wei,
+    Shen,
+    You,
+    Xu,
+    Hai,
 }
 
 impl DiZhi {
@@ -63,12 +73,18 @@ impl TryFrom<&str> for DiZhi {
     type Error = &'static str;
     fn try_from(s: &str) -> Result<Self, Self::Error> {
         match s {
-            "子" => Ok(DiZhi::Zi), "丑" => Ok(DiZhi::Chou),
-            "寅" => Ok(DiZhi::Yin), "卯" => Ok(DiZhi::Mao),
-            "辰" => Ok(DiZhi::Chen), "巳" => Ok(DiZhi::Si),
-            "午" => Ok(DiZhi::Wu), "未" => Ok(DiZhi::Wei),
-            "申" => Ok(DiZhi::Shen), "酉" => Ok(DiZhi::You),
-            "戌" => Ok(DiZhi::Xu), "亥" => Ok(DiZhi::Hai),
+            "子" => Ok(DiZhi::Zi),
+            "丑" => Ok(DiZhi::Chou),
+            "寅" => Ok(DiZhi::Yin),
+            "卯" => Ok(DiZhi::Mao),
+            "辰" => Ok(DiZhi::Chen),
+            "巳" => Ok(DiZhi::Si),
+            "午" => Ok(DiZhi::Wu),
+            "未" => Ok(DiZhi::Wei),
+            "申" => Ok(DiZhi::Shen),
+            "酉" => Ok(DiZhi::You),
+            "戌" => Ok(DiZhi::Xu),
+            "亥" => Ok(DiZhi::Hai),
             _ => Err("Invalid DiZhi string"),
         }
     }
@@ -81,12 +97,18 @@ impl Display for DiZhi {
             f,
             "{}",
             match self {
-                DiZhi::Zi => "子", DiZhi::Chou => "丑",
-                DiZhi::Yin => "寅", DiZhi::Mao => "卯",
-                DiZhi::Chen => "辰", DiZhi::Si => "巳",
-                DiZhi::Wu => "午", DiZhi::Wei => "未",
-                DiZhi::Shen => "申", DiZhi::You => "酉",
-                DiZhi::Xu => "戌", DiZhi::Hai => "亥",
+                DiZhi::Zi => "子",
+                DiZhi::Chou => "丑",
+                DiZhi::Yin => "寅",
+                DiZhi::Mao => "卯",
+                DiZhi::Chen => "辰",
+                DiZhi::Si => "巳",
+                DiZhi::Wu => "午",
+                DiZhi::Wei => "未",
+                DiZhi::Shen => "申",
+                DiZhi::You => "酉",
+                DiZhi::Xu => "戌",
+                DiZhi::Hai => "亥",
             }
         )
     }
@@ -137,7 +159,7 @@ impl Yao {
             Yao::YangChanging => "⚊ o",
         }
     }
-    
+
     /// 获取爻对应的数字索引字符（'1'代表阳，'2'代表阴）。
     /// 用于构成卦的六位数字索引，例如 "111111"。
     fn index_char(&self) -> char {
@@ -146,7 +168,7 @@ impl Yao {
             Yao::YangStatic | Yao::YangChanging => '1',
         }
     }
-    
+
     /// 获取此爻变化后的爻（动爻变为其相反的静爻，静爻不变）。
     /// 用于从正卦计算变卦。
     fn to_bian_yao(&self) -> Self {
@@ -246,9 +268,9 @@ async fn embedded_file(path: web::Path<String>) -> impl Responder {
 // 新增：用于表示单行卦爻信息的结构体
 #[derive(Serialize)]
 struct GuaLineResponse {
-    base_text: String, 
+    base_text: String,
     role: YaoRole,
-    zheng_relations_text: String, 
+    zheng_relations_text: String,
     // 变卦部分可以简化，因为它没有角色和关系
     bian_text: String,
     bian_relations_text: String,
@@ -287,7 +309,7 @@ impl Gua {
             yao_xiang,
             index_str,
             // 初始化时，所有爻都是普通角色
-            yao_roles: [YaoRole::Normal; 6], 
+            yao_roles: [YaoRole::Normal; 6],
             // 使用 Copy 特性可以直接创建数组，无需手动填充
             dizhi: [DiZhi::Zi; 6],
             wuxing: [WuXing::Jin; 6],
@@ -301,11 +323,11 @@ impl Gua {
 struct SixtyFourGua {
     // name: &'static str,
     index: &'static str,
-    nei_dizhi: [DiZhi; 3],   
-    // nei_wuxing: [WuXing; 3], 
-    wai_dizhi: [DiZhi; 3],   
-    // wai_wuxing: [WuXing; 3], 
-    palace_element: WuXing,  
+    nei_dizhi: [DiZhi; 3],
+    // nei_wuxing: [WuXing; 3],
+    wai_dizhi: [DiZhi; 3],
+    // wai_wuxing: [WuXing; 3],
+    palace_element: WuXing,
     gua_name: [&'static str; 8],
     gua_index: [&'static str; 8],
 }
@@ -620,7 +642,7 @@ fn append_dizhi(gua: &mut Gua) {
 
 // 填充六亲 (依赖五行和宫位五行)
 fn append_liuqin(gua: &mut Gua, palace_element: WuXing) {
-    use {LiuQin::*};
+    use LiuQin::*;
     for i in 0..6 {
         gua.liuqin[i] = match (palace_element, gua.wuxing[i]) {
             (WuXing::Jin, WuXing::Jin)
@@ -765,6 +787,28 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
         let mut bian_relations_text = String::new();
         // 只有当正卦的爻是动爻时，才计算回头关系
         if matches!(zheng_gua.yao_xiang[i], Yao::YinChanging | Yao::YangChanging) {
+            // 判断月的影响
+            if let Some(md) = month_dizhi {
+                // 判断并追加冲合关系 (月对爻)
+                if let Some(relation) = get_chong_he_relation(bian_gua.dizhi[i], md) {
+                    bian_relations_text.push_str(&format!(" 月{}", relation));
+                }
+                // 判断并追加生克关系 (月对爻)
+                if let Some(relation) = get_sheng_ke_relation(md.wuxing(), bian_gua.wuxing[i]) {
+                    bian_relations_text.push_str(&format!(" 月{}", relation));
+                }
+            }
+            // 判断日的影响
+            if let Some(dd) = day_dizhi {
+                // 判断并追加冲合关系 (日对爻)
+                if let Some(relation) = get_chong_he_relation(bian_gua.dizhi[i], dd) {
+                    bian_relations_text.push_str(&format!(" 日{}", relation));
+                }
+                // 判断并追加生克关系 (日对爻)
+                if let Some(relation) = get_sheng_ke_relation(dd.wuxing(), bian_gua.wuxing[i]) {
+                    bian_relations_text.push_str(&format!(" 日{}", relation));
+                }
+            }
             // 变爻回头生克 (变爻的五行 -> 正爻的五行)
             if let Some(relation) = get_sheng_ke_relation(bian_gua.wuxing[i], zheng_gua.wuxing[i]) {
                 bian_relations_text.push_str(&format!(" 回头{}", relation));
