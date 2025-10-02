@@ -141,6 +141,35 @@ impl Display for LiuQin {
     }
 }
 
+/// 表示六神（青龙、朱雀、勾陈、螣蛇、白虎、玄武）。
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum LiuShen {
+    QingLong,
+    ZhuQue,
+    GouChen,
+    TengShe,
+    BaiHu,
+    XuanWu,
+}
+
+// 实现 Display trait，用于将六神枚举转换为可打印的汉字字符串。
+impl Display for LiuShen {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{}",
+            match self {
+                LiuShen::QingLong => "青龙",
+                LiuShen::ZhuQue => "朱雀",
+                LiuShen::GouChen => "勾陈",
+                LiuShen::TengShe => "螣蛇",
+                LiuShen::BaiHu => "白虎",
+                LiuShen::XuanWu => "玄武",
+            }
+        )
+    }
+}
+
 /// 表示爻的四种状态（动爻与静爻）。
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Yao {
@@ -268,6 +297,7 @@ async fn embedded_file(path: web::Path<String>) -> impl Responder {
 // 用于表示单行卦爻信息的结构体
 #[derive(Serialize)]
 struct GuaLineResponse {
+    liushen: Option<String>,
     base_text: String,
     role: YaoRole,
     zheng_relations_text: String,
@@ -574,6 +604,31 @@ fn get_sheng_ke_relation(wuxing1: WuXing, wuxing2: WuXing) -> Option<ShengKe> {
     }
 }
 
+// 根据日干确定六神序列
+fn get_liush_shen_sequence(day_gan: char) -> [LiuShen; 6] {
+    use LiuShen::*;
+    // 固定的六神顺序
+    const SHUNXU: [LiuShen; 6] = [QingLong, ZhuQue, GouChen, TengShe, BaiHu, XuanWu];
+
+    // 找到起始六神在固定顺序中的索引
+    let start_index = match day_gan {
+        '甲' | '乙' => 0, // 甲乙日，初爻起青龙
+        '丙' | '丁' => 1, // 丙丁日，初爻起朱雀
+        '戊' => 2,        // 戊日，  初爻起勾陈
+        '己' => 3,        // 己日，  初爻起螣蛇
+        '庚' | '辛' => 4, // 庚辛日，初爻起白虎
+        '壬' | '癸' => 5, // 壬癸日，初爻起玄武
+        _ => 0,           // 容错处理，虽然不应该发生
+    };
+
+    let mut result = [QingLong; 6];
+    for i in 0..6 {
+        // 通过取模运算实现循环排列
+        result[i] = SHUNXU[(start_index + i) % 6];
+    }
+    result
+}
+
 // 确定世应并填充 (仅用于正卦)
 fn determine_yao_roles(gua: &mut Gua) {
     let nei = &gua.yao_xiang[0..3];
@@ -733,6 +788,20 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     // 处理变卦 (使用正卦的宫位五行)
     process_gua(&mut bian_gua, palace_element);
 
+    // 获取日干，如果失败则直接返回错误
+    let day_gan_char = match day_ganzhi.chars().next() {
+        Some(gan) => gan,
+        None => {
+            // 在服务器端打印错误日志，方便排查问题
+            eprintln!("严重错误: 从lunar_rust获取的日干支为空字符串!");
+            // 向前端返回一个明确的内部服务器错误
+            return HttpResponse::InternalServerError().json("无法获取日干，排盘中断");
+        }
+    };
+
+    // 成功获取日干后获取六神
+    let liushen_sequence = get_liush_shen_sequence(day_gan_char);
+
     // 获取月和日的地支
     let month_dizhi_str = month_ganzhi
         .chars()
@@ -831,6 +900,7 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
         );
 
         gua_lines.push(GuaLineResponse {
+            liushen: Some(liushen_sequence[i].to_string()),
             base_text,
             role: zheng_gua.yao_roles[i],
             zheng_relations_text,
@@ -841,6 +911,7 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     }
     // 单独处理卦名 离为火䷝(六冲)震为雷䷲(六) 等
     let name_line = GuaLineResponse {
+        liushen: None,
         base_text: zheng_gua.palace_name.to_string(),
         role: YaoRole::Normal,
         zheng_relations_text: String::new(),

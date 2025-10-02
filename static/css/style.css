@@ -231,6 +231,14 @@ button:disabled {
 	margin-left: 0.4em;
 }
 
+.liushen-text {
+  color: var(--color-text-subtle);
+  font-weight: normal;
+  margin-right: 0.5em; /* 和后面的内容拉开距离 */
+  width: 2.5em; /* 固定宽度，让上下对齐 */
+  text-align: right;
+}
+
 .bian-gua.not-changed {
     color: #999; /* 或者使用 var(--color-text-subtle) */
     opacity: 0.7;

@@ -104,13 +104,20 @@ async function generateGuaXiang() {
 					bianDiv.classList.add("gua-name");
 					bianDiv.textContent = lineData.bian_text;
 				} else {
-					// 1. 添加基础文本 (六亲、地支、五行、爻象)
+					// 如果有六神信息，创建六神 < span >
+					if (lineData.liushen) {
+						const liushenSpan = document.createElement('span');
+						liushenSpan.className = 'liushen-text';
+						liushenSpan.textContent = lineData.liushen;
+						zhengDiv.appendChild(liushenSpan);
+					}
+					// 添加基础文本 (六亲、地支、五行、爻象)
 					const baseSpan = document.createElement("span");
 					baseSpan.textContent = lineData.base_text;
 					addWuxingColorClass(baseSpan, lineData.base_text.charAt(2));
 					zhengDiv.appendChild(baseSpan);
 
-					// 2. 如果是世或应，创建独立的、带样式的 <span>
+					// 如果是世或应，创建独立的、带样式的 <span>
 					if (lineData.role === "Shi" || lineData.role === "Ying") {
 						const roleSpan = document.createElement("span");
 						roleSpan.className = `role-tag ${lineData.role.toLowerCase()}-tag`;
