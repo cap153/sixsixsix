@@ -232,16 +232,19 @@ button:disabled {
 }
 
 .liushen-text {
-  color: var(--color-text-subtle);
-  font-weight: normal;
-  margin-right: 0.5em; /* 和后面的内容拉开距离 */
-  width: 2.5em; /* 固定宽度，让上下对齐 */
-  text-align: right;
+	color: var(--color-text-subtle);
+	font-weight: normal;
+	margin-right: 0.5em;
+	/* 和后面的内容拉开距离 */
+	width: 2.5em;
+	/* 固定宽度，让上下对齐 */
+	text-align: right;
 }
 
 .bian-gua.not-changed {
-    color: #999; /* 或者使用 var(--color-text-subtle) */
-    opacity: 0.7;
+	color: #999;
+	/* 或者使用 var(--color-text-subtle) */
+	opacity: 0.7;
 }
 
 /* 为了覆盖五行颜色，需要提高选择器权重 */
@@ -250,7 +253,8 @@ button:disabled {
 .bian-gua.not-changed .fire,
 .bian-gua.not-changed .metal,
 .bian-gua.not-changed .earth {
-    color: inherit; /* 继承父元素的灰色 */
+	color: inherit;
+	/* 继承父元素的灰色 */
 }
 
 
@@ -385,6 +389,11 @@ footer {
 	.ganzhi-info {
 		gap: 0.8rem;
 		flex-wrap: wrap;
+	}
+
+	.xun-kong-info {
+		color: var(--color-secondary);
+		font-weight: 500;
 	}
 
 	.reference-content {

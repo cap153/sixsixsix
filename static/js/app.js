@@ -80,6 +80,10 @@ async function generateGuaXiang() {
 				addWuxingColorClass(span, part.branchChar);
 				ganzhiInfoDiv.appendChild(span);
 			});
+			const xunKongSpan = document.createElement('span');
+			xunKongSpan.textContent = `旬空:${data.xun_kong}`;
+			xunKongSpan.className = 'xun-kong-info';
+			ganzhiInfoDiv.appendChild(xunKongSpan);
 			resultContainer.appendChild(ganzhiInfoDiv);
 
 			// 创建卦象展示网格

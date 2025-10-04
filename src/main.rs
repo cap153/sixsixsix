@@ -314,6 +314,7 @@ struct GuaResponse {
     month_ganzhi: String,
     day_ganzhi: String,
     hour_ganzhi: String,
+    xun_kong: String,
 }
 
 #[derive(Deserialize)]
@@ -542,6 +543,16 @@ const SIXTYFOURGUA_DATA: [SixtyFourGua; 8] = [
     },
 ];
 
+const JIAZI_CYCLE: [&str; 60] = [
+    "甲子", "乙丑", "丙寅", "丁卯", "戊辰", "己巳", "庚午", "辛未", "壬申", "癸酉", "甲戌", "乙亥",
+    "丙子", "丁丑", "戊寅", "己卯", "庚辰", "辛巳", "壬午", "癸未", "甲申", "乙酉", "丙戌", "丁亥",
+    "戊子", "己丑", "庚寅", "辛卯", "壬辰", "癸巳", "甲午", "乙未", "丙申", "丁酉", "戊戌", "己亥",
+    "庚子", "辛丑", "壬寅", "癸卯", "甲辰", "乙巳", "丙午", "丁未", "戊申", "己酉", "庚戌", "辛亥",
+    "壬子", "癸丑", "甲寅", "乙卯", "丙辰", "丁巳", "戊午", "己未", "庚申", "辛酉", "壬戌", "癸亥",
+];
+
+const XUN_KONG: [&str; 6] = ["戌亥", "申酉", "午未", "辰巳", "寅卯", "子丑"];
+
 // 获取干支信息，例如乙巳年 辛巳月 壬辰日 申时
 fn get_ganzhi_info() -> (String, String, String, String) {
     let now = Local::now();
@@ -601,6 +612,39 @@ fn get_sheng_ke_relation(wuxing1: WuXing, wuxing2: WuXing) -> Option<ShengKe> {
         (Mu, Huo) | (Huo, Tu) | (Tu, Jin) | (Jin, Shui) | (Shui, Mu) => Some(Sheng),
         (Mu, Tu) | (Huo, Jin) | (Tu, Shui) | (Jin, Mu) | (Shui, Huo) => Some(Ke),
         _ => None,
+    }
+}
+
+/// 根据日干支计算旬空
+fn calculate_xun_kong(day_ganzhi: &str) -> Option<&'static str> {
+    // 在六十甲子周期中查找当前干支的位置
+    JIAZI_CYCLE
+        .iter()
+        .position(|&gz| gz == day_ganzhi)
+        .map(|index| {
+            // 根据位置（0-59）计算它属于哪个旬（0-5）
+            let xun_index = index / 10;
+            // 从旬空表中返回对应的旬空
+            XUN_KONG[xun_index]
+        })
+}
+
+/// 解析旬空字符串（如 "戌亥"）为两个地支枚举
+fn parse_xun_kong(xun_kong_str: &str) -> Option<(DiZhi, DiZhi)> {
+    if xun_kong_str.chars().count() != 2 {
+        return None;
+    }
+    let mut chars = xun_kong_str.chars();
+    let dz1_str = chars.next()?.to_string();
+    let dz2_str = chars.next()?.to_string();
+
+    if let (Ok(dz1), Ok(dz2)) = (
+        DiZhi::try_from(dz1_str.as_str()),
+        DiZhi::try_from(dz2_str.as_str()),
+    ) {
+        Some((dz1, dz2))
+    } else {
+        None
     }
 }
 
@@ -764,6 +808,13 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
     // 获取干支信息
     let (year_ganzhi, month_ganzhi, day_ganzhi, hour_ganzhi) = get_ganzhi_info();
 
+    // 计算前端显示的旬空
+    let xun_kong_opt = calculate_xun_kong(&day_ganzhi);
+    let xun_kong = xun_kong_opt.unwrap_or("").to_string();
+
+    // 获取旬空的地支拿给爻判断
+    let xun_kong_dizhi = xun_kong_opt.and_then(parse_xun_kong);
+
     // 1. === 初始化正卦 (Zheng Gua) ===
     let mut zheng_yao_xiang = [Yao::YinStatic; 6];
     for (i, c) in numbers.chars().enumerate().take(6) {
@@ -830,6 +881,12 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
         );
         // 构建正卦关系文本
         let mut zheng_relations_text = String::new();
+        // 优先判断旬空
+        if let Some((dz1, dz2)) = xun_kong_dizhi {
+            if zheng_gua.dizhi[i] == dz1 || zheng_gua.dizhi[i] == dz2 {
+                zheng_relations_text.push_str(" 旬空");
+            }
+        }
         // 判断月的影响
         if let Some(md) = month_dizhi {
             // 判断并追加冲合关系 (月对爻)
@@ -858,6 +915,12 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
         // 只有当正卦的爻是动爻时，才计算回头关系
         let is_changing = matches!(zheng_gua.yao_xiang[i], Yao::YinChanging | Yao::YangChanging);
         if is_changing {
+            // 判断旬空
+            if let Some((dz1, dz2)) = xun_kong_dizhi {
+                if bian_gua.dizhi[i] == dz1 || bian_gua.dizhi[i] == dz2 {
+                    bian_relations_text.push_str(" 旬空");
+                }
+            }
             // 判断月的影响
             if let Some(md) = month_dizhi {
                 // 判断并追加冲合关系 (月对爻)
@@ -886,7 +949,7 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
             }
             // 变爻回头冲合 (变爻的地支 vs 正爻的地支)
             if let Some(relation) = get_chong_he_relation(bian_gua.dizhi[i], zheng_gua.dizhi[i]) {
-                bian_relations_text.push_str(&format!("{}", relation));
+                bian_relations_text.push_str(&format!("回头{}", relation));
             }
         }
 
@@ -927,6 +990,7 @@ async fn generate_gua_xian(req: web::Json<GuaRequest>) -> impl Responder {
         month_ganzhi,
         day_ganzhi,
         hour_ganzhi,
+        xun_kong,
     })
 }
 
